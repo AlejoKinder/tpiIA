@@ -2,7 +2,7 @@ import interfaz   # Posiblemente tengamos que hacer al revés, dijo el que se re
 import random
 
 def escaladaSimple(data):
-    actual = ''
+    actual = 'A'
     final = 'C'   #momentaneamente la forma de saber cual es el nodo final, hasta que tute se digne a añadir cual es el final en el diccionario.
     explorados = []
     i = 0   #momentaneamente la forma de acceder a la heuristica, hasta que tute se digne a añadir el atributo para el costo de la conexion entre nodos. 
