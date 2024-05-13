@@ -1,41 +1,214 @@
-import interfaz   # Posiblemente tengamos que hacer al revés, dijo el que se resbaló y cayó de espalda.
+
+#import interfaz   # Posiblemente tengamos que hacer al revés, dijo el que se resbaló y cayó de espalda.
 import random
+import time
+import networkx as nx
+import matplotlib.pyplot as plt
 
-def escaladaSimple(data):
-    actual = 'A'
-    final = 'C'   #momentaneamente la forma de saber cual es el nodo final, hasta que tute se digne a añadir cual es el final en el diccionario.
-    explorados = []
-    i = 0   #momentaneamente la forma de acceder a la heuristica, hasta que tute se digne a añadir el atributo para el costo de la conexion entre nodos. 
+def agregarGrafo(G, u, v, w = 1, sent = True):
+    G.add_edge(u, v, weight = w)
 
-    for label_char, item in data.items():   # Iteramos sobre el diccionario
-        print("Estoy en el datos:", label_char)   #depuración
-        connections_str = item['connections'].text()  # Obtener la cadena de conexiones
-        cant_items = cantItems(connections_str)  # Obtener la cantidad de elementos en la lista
-        vectorCosto = crear_vector(cantItems)
-        imprimirVector(vectorCosto)   #depuración
+    #si sentido es falso, quiere decir que queremos que sea unidireccional
+    if sent:
+        G.add_edge(v, u, weight = w)
 
-        for connection in connections_str.split(', '):  # Iterar sobre cada conexión
-            # Realizar acciones con cada conexión
-            if()
+def visualizarNodos(data, node_colors=None):
+    F = nx.DiGraph()  # Crear un nuevo grafo dirigido
 
-def cantItems(connections_str):
-    # Dividir la cadena en una lista
-    connections_list = connections_str.split(', ')
-    # Obtener la cantidad de elementos en la lista
-    cantidad_items = len(connections_list)
-    return cantidad_items
+    # Agregar todos los nodos al grafo
+    for node, properties in data.items():
+        F.add_node(node, pos=(float(properties['x_coord']), float(properties['y_coord'])))
+
+    # Agregar las conexiones al grafo (bidireccionales)
+    for node, properties in data.items():
+        connections = properties['connections']
+        for connection in connections:
+            # Agregar la conexión en ambas direcciones
+            F.add_edge(node, connection)
+            F.add_edge(connection, node)
+
+    # Obtener las posiciones de los nodos según las coordenadas
+    pos = nx.get_node_attributes(F, 'pos')
+
+    # Dibujar el grafo
+    if node_colors:
+        nx.draw(F, pos, with_labels=True, arrows=False, node_color=[node_colors.get(node, 'blue') for node in F.nodes()])
+    else:
+        nx.draw(F, pos, with_labels=True, arrows=False)
+
+    plt.title("Grafos con Conexiones")
+    plt.pause(5)  # Pausa de 5 segundos
+    plt.show()
 
 
-def crear_vector(cant_items):   #esto es momentaneo hasta que tute se digne a añadir el atributo para el costo de la conexion entre nodos.
-    vector = []
-    for _ in range(cant_items):
-        valor = random.randint(1, 50)  # Genera un valor aleatorio entre 1 y 50
-        vector.append(valor)
-    return vector
 
-def imprimirVector(vector):
-    # Convertir los elementos del vector en una cadena separada por espacios
-    cadena_vector = ' '.join(map(str, vector))
+def visualizarArbol(G, node_colors=None):
+    # Obtener la posición de los nodos para dibujar como un árbol
+    pos = nx.nx_agraph.graphviz_layout(G, prog='dot')
 
-    # Imprimir la cadena resultante
-    print(cadena_vector)
+    # Limpiar la figura actual
+    plt.clf()
+
+    # Dibujar el grafo como un árbol
+    if node_colors:
+        nx.draw(G, pos, with_labels=True, arrows=False, node_color=[node_colors.get(node, 'blue') for node in G.nodes()])
+    else:
+        nx.draw(G, pos, with_labels=True, arrows=False)
+
+    plt.title("Grafo como Árbol")
+    plt.pause(3)  # Pausa de 3 segundos
+
+
+def escaladaSimple(data, inicial, final):
+    explorados = set()   # Utilizamos un conjunto para los nodos explorados
+    camino = set()
+    act = inicial   # Nodo actual
+    next_node = None  # Inicializamos next_node con None
+    node_colors = {}
+    node_colors[inicial] = 'green'
+    node_colors[final] = 'orange'
+
+    print("Algoritmo seleccionado: Escalada simple")
+
+    visualizarNodos(data, node_colors)   #Graficamos todos los nodos
+
+    print("Nodo inicial:", inicial)
+    print("Nodo final:", final)
+
+    # Creamos la variable que contiene el grafo
+    G = nx.DiGraph()
+
+    while act != final:
+        print("Estoy en el nodo:", act)   # Depuración
+
+        # Si hemos llegado al nodo final, terminamos el algoritmo
+        if act == final:
+            print("Nodo final")
+            break
+        
+        # Agregamos el nodo actual a la lista de explorados
+        explorados.add(act)
+        camino.add(act)
+
+        # Obtenemos el costo del nodo actual
+        costo_actual = data[act]['valor_heuristico']
+
+        # Obtenemos las conexiones del nodo actual
+        connections_str = data[act]['connections']
+        
+        # Verificar si connections_str es una cadena antes de llamar a split()
+        if isinstance(connections_str, str):
+            connections = connections_str.split(', ')
+        else:
+            connections = connections_str
+
+        next_node = None
+
+        # Iteramos sobre las conexiones del nodo actual
+        for connection in connections:
+            # Verificamos si la conexión ya ha sido explorada
+            if connection not in explorados:
+                explorados.add(connection)
+                # Comparamos el costo de la conexión con el mínimo costo actual
+                agregarGrafo(G, act, connection)  # Agregar conexión al grafo
+                visualizarArbol(G, node_colors)
+                if (connection != final):                 
+                    if int(data[connection]['valor_heuristico']) < int(costo_actual):                    
+                        act = connection
+                        next_node = connection
+                        break  # Salimos del bucle cuando se encuentra una conexión con un costo más bajo
+                else:
+                    act = connection
+                    next_node = connection
+                    break
+                    
+                
+        if next_node is None:
+            print("Hay un mínimo local en:", act)
+            node_colors[act] = 'red'
+            visualizarArbol(G, node_colors)
+            break
+        # Si encontramos un nodo con un costo menor, avanzamos hacia ese nodo
+        else:
+            act = next_node
+            print("El nuevo nodo actual es", act)
+
+    print("Fin del bucle")
+
+
+def maximaPendiente(data, inicial, final):
+    explorados = set()   # Utilizamos un conjunto para los nodos explorados
+    camino = set()
+    act = inicial   # Nodo actual
+    ss = inicial   #sucesor para el nodo actual
+    next_node = None  # Inicializamos next_node con None
+    node_colors = {}
+    node_colors[inicial] = 'green'
+    node_colors[final] = 'orange'
+
+    print("Algoritmo seleccionado: Maxima Pendiente")
+
+    visualizarNodos(data, node_colors)   #Graficamos todos los nodos
+
+    print("Nodo inicial:", inicial)
+    print("Nodo final:", final)
+
+    # Creamos la variable que contiene el grafo
+    G = nx.DiGraph()
+
+    while act != final:
+        print("Estoy en el nodo:", act)   # Depuración
+
+        # Si hemos llegado al nodo final, terminamos el algoritmo
+        if act == final:
+            print("Nodo final")
+            break
+        
+        # Agregamos el nodo actual a la lista de explorados
+        explorados.add(act)
+        camino.add(act)
+
+        # Obtenemos el costo del nodo actual
+        costo_actual = data[act]['valor_heuristico']
+
+        # Obtenemos las conexiones del nodo actual
+        connections_str = data[act]['connections']
+        
+        # Verificar si connections_str es una cadena antes de llamar a split()
+        if isinstance(connections_str, str):
+            connections = connections_str.split(', ')
+        else:
+            connections = connections_str
+
+        next_node = None
+
+        # Iteramos sobre las conexiones del nodo actual
+        for connection in connections:
+            # Verificamos si la conexión ya ha sido explorada
+            if connection not in explorados:
+                explorados.add(connection)
+                # Comparamos el costo de la conexión con el mínimo costo actual
+                agregarGrafo(G, act, connection)  # Agregar conexión al grafo
+                visualizarArbol(G, node_colors)
+                if (connection != final):                 
+                    if int(data[connection]['valor_heuristico']) < int(costo_actual):                    
+                        ss = connection
+                        costo_actual = data[ss]['valor_heuristico']
+                        next_node = connection
+                        #break  # Salimos del bucle cuando se encuentra una conexión con un costo más bajo
+                else:
+                    act = connection
+                    next_node = connection
+                    break              
+                
+        if next_node is None:
+            print("Hay un mínimo local en:", act)
+            node_colors[act] = 'red'
+            visualizarArbol(G, node_colors)
+            break
+        # Si encontramos un nodo con un costo menor, avanzamos hacia ese nodo
+        else:
+            act = next_node
+            print("El nuevo nodo actual es", act)
+
+    print("Fin del bucle")

@@ -3,6 +3,8 @@ import random
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QScrollArea, QHBoxLayout, QPushButton, QCheckBox, QFrame, QComboBox, QLabel
 from PyQt5.QtGui import QIntValidator
 
+import algoritmo   #archivo que hace los algoritmos
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -301,12 +303,58 @@ class MainWindow(QMainWindow):
         print(f"Nodo inicial: {self.initial_node_dropdown.currentText()}")
         print(f"Nodo final: {self.final_node_dropdown.currentText()}")
 
+        # Convert identifiers, x_coord, y_coord, and valor_heuristico to strings
+        new_data = {}  # New dictionary to store modified data
+        for identifier_edit, attributes in self.data.items():
+            # Convert identifier to string
+            new_identifier = str(identifier_edit.text())
+            new_connections = [checkbox.text() for checkbox in attributes['connections'] if checkbox.isChecked()]
+            new_attributes = {
+                'x_coord': str(attributes['x_coord'].text()),
+                'y_coord': str(attributes['y_coord'].text()),
+                'valor_heuristico': str(attributes['valor_heuristico'].text()),
+                'connections': new_connections
+            }
+            new_data[new_identifier] = new_attributes
+
+        # Update self.data with the modified dictionary
+        #self.data = new_data
+
+        # Print the modified attributes
+        self.print_attributes()
+
+
+        algoritmo.escaladaSimple(new_data, self.initial_node_dropdown.currentText(), self.final_node_dropdown.currentText())
+
 
     def maxima_pendiente(self):
         self.print_attributes()
         print("Máxima pendiente")
         print(f"Nodo inicial: {self.initial_node_dropdown.currentText()}")
         print(f"Nodo final: {self.final_node_dropdown.currentText()}")
+
+        # Convert identifiers, x_coord, y_coord, and valor_heuristico to strings
+        new_data = {}  # New dictionary to store modified data
+        for identifier_edit, attributes in self.data.items():
+            # Convert identifier to string
+            new_identifier = str(identifier_edit.text())
+            new_connections = [checkbox.text() for checkbox in attributes['connections'] if checkbox.isChecked()]
+            new_attributes = {
+                'x_coord': str(attributes['x_coord'].text()),
+                'y_coord': str(attributes['y_coord'].text()),
+                'valor_heuristico': str(attributes['valor_heuristico'].text()),
+                'connections': new_connections
+            }
+            new_data[new_identifier] = new_attributes
+
+        # Update self.data with the modified dictionary
+        #self.data = new_data
+
+        # Print the modified attributes
+        self.print_attributes()
+
+
+        algoritmo.maximaPendiente(new_data, self.initial_node_dropdown.currentText(), self.final_node_dropdown.currentText())
 
     def volver(self):
         for i in range(self.layout.count()):
