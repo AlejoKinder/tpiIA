@@ -17,11 +17,11 @@ def visualizarNodos(data, node_colors=None):
 
     # Agregar todos los nodos al grafo
     for node, properties in data.items():
-        F.add_node(node, pos=(float(properties['x_coord']), float(properties['y_coord'])))
+        F.add_node(node, pos=(float(properties['coord_x']), float(properties['coord_y'])))
 
     # Agregar las conexiones al grafo (bidireccionales)
     for node, properties in data.items():
-        connections = properties['connections']
+        connections = properties['conexiones']
         for connection in connections:
             # Agregar la conexión en ambas direcciones
             F.add_edge(node, connection)
@@ -94,7 +94,7 @@ def escaladaSimple(data, inicial, final):
         costo_actual = data[act]['valor_heuristico']
 
         # Obtenemos las conexiones del nodo actual
-        connections_str = data[act]['connections']
+        connections_str = data[act]['conexiones']
         
         # Verificar si connections_str es una cadena antes de llamar a split()
         if isinstance(connections_str, str):
@@ -172,7 +172,7 @@ def maximaPendiente(data, inicial, final):
         costo_actual = data[act]['valor_heuristico']
 
         # Obtenemos las conexiones del nodo actual
-        connections_str = data[act]['connections']
+        connections_str = data[act]['conexiones']
         
         # Verificar si connections_str es una cadena antes de llamar a split()
         if isinstance(connections_str, str):
