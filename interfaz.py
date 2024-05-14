@@ -224,31 +224,23 @@ class MainWindow(QMainWindow):
 
     def asegurar_bidireccionalidad(self, estado):
         if estado == 2:
-            print("click")
             checkbox_clickeada = self.sender()
             for nodo, atributos in self.datos_nodos.items():
                 if checkbox_clickeada in atributos['conexiones']:
                     nodo_clickeado = nodo
-            print(f"{checkbox_clickeada.text()}")
             for nodo in self.datos_nodos.keys():
                 if nodo.text() == checkbox_clickeada.text():
-                    print("encontrado")
                     for conexion_checkbox in self.datos_nodos[nodo]['conexiones']:
-                        print(f"{conexion_checkbox}")
                         if conexion_checkbox.text() == nodo_clickeado.text():
                             conexion_checkbox.setChecked(True)
         else:
-            print("click")
             checkbox_clickeada = self.sender()
             for nodo, atributos in self.datos_nodos.items():
                 if checkbox_clickeada in atributos['conexiones']:
                     nodo_clickeado = nodo
-            print(f"{checkbox_clickeada.text()}")
             for nodo in self.datos_nodos.keys():
                 if nodo.text() == checkbox_clickeada.text():
-                    print("encontrado")
                     for conexion_checkbox in self.datos_nodos[nodo]['conexiones']:
-                        print(f"{conexion_checkbox}")
                         if conexion_checkbox.text() == nodo_clickeado.text():
                             conexion_checkbox.setChecked(False)
 
