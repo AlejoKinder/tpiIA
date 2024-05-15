@@ -223,25 +223,17 @@ class MainWindow(QMainWindow):
         self.layout_inferior.addWidget(self.busq_y_nav)
 
     def asegurar_bidireccionalidad(self, estado):
-        if estado == 2:
-            checkbox_clickeada = self.sender()
-            for nodo, atributos in self.datos_nodos.items():
-                if checkbox_clickeada in atributos['conexiones']:
-                    nodo_clickeado = nodo
-            for nodo in self.datos_nodos.keys():
-                if nodo.text() == checkbox_clickeada.text():
-                    for conexion_checkbox in self.datos_nodos[nodo]['conexiones']:
-                        if conexion_checkbox.text() == nodo_clickeado.text():
+        checkbox_clickeada = self.sender()
+        for nodo, atributos in self.datos_nodos.items():
+            if checkbox_clickeada in atributos['conexiones']:
+                nodo_clickeado = nodo
+        for nodo in self.datos_nodos.keys():
+            if nodo.text() == checkbox_clickeada.text():
+                for conexion_checkbox in self.datos_nodos[nodo]['conexiones']:
+                    if conexion_checkbox.text() == nodo_clickeado.text():
+                        if estado == 2:
                             conexion_checkbox.setChecked(True)
-        else:
-            checkbox_clickeada = self.sender()
-            for nodo, atributos in self.datos_nodos.items():
-                if checkbox_clickeada in atributos['conexiones']:
-                    nodo_clickeado = nodo
-            for nodo in self.datos_nodos.keys():
-                if nodo.text() == checkbox_clickeada.text():
-                    for conexion_checkbox in self.datos_nodos[nodo]['conexiones']:
-                        if conexion_checkbox.text() == nodo_clickeado.text():
+                        else:
                             conexion_checkbox.setChecked(False)
 
 
