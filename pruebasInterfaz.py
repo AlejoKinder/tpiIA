@@ -1,7 +1,10 @@
+import math
 import sys
 import random
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QScrollArea, QHBoxLayout, QPushButton, QCheckBox, QFrame, QComboBox, QLabel
 from PyQt5.QtGui import QIntValidator
+
+import algoritmo   #archivo que hace los algoritmos
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -10,206 +13,180 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Buscador automático")
         self.setGeometry(100, 100, 600, 400)
 
-        # Create a main widget to hold the entire layout
-        main_widget = QWidget()
-        self.setCentralWidget(main_widget)
+        widget_principal = QWidget()
+        self.setCentralWidget(widget_principal)
 
-        # Create a vertical layout for the main widget
-        main_layout = QVBoxLayout(main_widget)
+        layout_principal = QVBoxLayout(widget_principal)
 
-        # Create a horizontal layout for the title and "Aleatorio" button
-        self.title_layout = QHBoxLayout()
+        self.titulo_layout = QHBoxLayout()
 
-        # Create a label for the title "Ingresar coordenadas"
-        self.title_label = QLabel("Crear nodos")
-        self.title_label.setStyleSheet("font-size: 20px; font-weight: bold;")
+        self.label_titulo = QLabel("Crear nodos")
+        self.label_titulo.setStyleSheet("font-size: 20px; font-weight: bold;")
 
-        # Add the title label to the title layout
-        self.title_layout.addWidget(self.title_label)
+        self.titulo_layout.addWidget(self.label_titulo)
 
-        # Create the "Aleatorio" button
-        self.aleatorio_button = QPushButton("Aleatorio")
-        self.aleatorio_button.clicked.connect(self.fill_random_numbers)
+        self.boton_aleatorio = QPushButton("Aleatorio")
+        self.boton_aleatorio.clicked.connect(self.aleatorio_numeros)
 
-        # Add the "Aleatorio" button to the title layout
-        self.title_layout.addWidget(self.aleatorio_button)
+        self.titulo_layout.addWidget(self.boton_aleatorio)
 
-        # Add the title layout to the main layout
-        main_layout.addLayout(self.title_layout)
+        layout_principal.addLayout(self.titulo_layout)
 
-        # Create a scroll area to hold the dynamic blocks
+
         self.scroll_area = QScrollArea()
-        self.scroll_area.setWidgetResizable(True)  # Allow the scroll area to resize its content
-        main_layout.addWidget(self.scroll_area)
+        self.scroll_area.setWidgetResizable(True)  
+        layout_principal.addWidget(self.scroll_area)
 
-        # Create a widget to hold the dynamic blocks layout
-        self.content_widget = QWidget()  # Keep a reference to the content widget
-        self.scroll_area.setWidget(self.content_widget)
+        # Crear widget para contener los bloques de los nodos
+        self.widget_nodos = QWidget()
+        self.scroll_area.setWidget(self.widget_nodos)
 
-        self.layout = QVBoxLayout(self.content_widget)
+        self.layout = QVBoxLayout(self.widget_nodos)
 
-        # Dictionary to store coordinates and connections for each label
-        self.data = {}
+        # Diccionario para guardar todos los datos de los nodos
+        self.datos_nodos = {}
 
-        # Create a bottom widget to hold the buttons and checklist
-        self.bottom_widget = QWidget()
-        self.bottom_layout = QHBoxLayout(self.bottom_widget)
+        # Widget de botones de "aceptar" y "añadir nodo"
+        self.widget_inferior = QWidget()
+        self.layout_inferior = QHBoxLayout(self.widget_inferior)
 
-        # Add Block button
-        self.add_block_button = QPushButton("Añadir nodo")
-        self.add_block_button.clicked.connect(self.add_block)
-        self.bottom_layout.addWidget(self.add_block_button)
 
-        # Aceptar button
-        self.accept_button = QPushButton("Aceptar")
-        self.accept_button.setEnabled(False)  # Initially disable the button
-        self.accept_button.clicked.connect(self.accept_coordinates)  # Connect the method
-        self.bottom_layout.addWidget(self.accept_button)
+        self.boton_aniadir_nodo = QPushButton("Añadir nodo")
+        self.boton_aniadir_nodo.clicked.connect(self.aniadir_nodo)
+        self.layout_inferior.addWidget(self.boton_aniadir_nodo)
 
-        # Add the bottom widget to the main layout
-        main_layout.addWidget(self.bottom_widget)
 
-        # Add initial block (after buttons creation)
-        self.add_block()
+        self.boton_aceptar = QPushButton("Aceptar")
+        self.boton_aceptar.setEnabled(False)  # Deshabilitar el botón al inicio, para requerir que el usuario rellene los campos
+        self.boton_aceptar.clicked.connect(self.aceptar_nodos)  # Método del botón
+        self.layout_inferior.addWidget(self.boton_aceptar)
 
-    def add_block(self):
-        # Create a block widget
-        block_widget = QWidget()
-        block_widget.setProperty("etiqueta", "coordenadas")
-        block_widget.setStyleSheet("background-color: lightblue;")
+ 
+        layout_principal.addWidget(self.widget_inferior)
 
-        # Create input fields for identifier, X and Y coordinates
-        identifier_edit = QLineEdit("", block_widget)
-        x_coord_edit = QLineEdit("", block_widget)
-        y_coord_edit = QLineEdit("", block_widget)
-        valor_heuristico_edit = QLineEdit("", block_widget)
+        # Añadir el primer nodo
+        self.aniadir_nodo()
 
-        # Set maximum length for identifier field
-        identifier_edit.setMaxLength(10)
+    def aniadir_nodo(self):
+        widget_nodo = QWidget()
+        widget_nodo.setProperty("etiqueta", "coordenadas")
+        widget_nodo.setStyleSheet("background-color: lightblue;")
 
-        # Apply integer validator to coordinate and heuristic value fields
-        int_validator = QIntValidator()
-        x_coord_edit.setValidator(int_validator)
-        y_coord_edit.setValidator(int_validator)
-        valor_heuristico_edit.setValidator(int_validator)
+        # Se crean campos de propiedades del nodo
+        LEdit_nombre = QLineEdit("", widget_nodo)
+        LEdit_coord_x = QLineEdit("", widget_nodo)
+        LEdit_coord_y = QLineEdit("", widget_nodo)
 
-        # Create labels indicating what should go in each field
-        identifier_label = QLabel("Nombre:", block_widget)
-        x_coord_label = QLabel("X:", block_widget)
-        y_coord_label = QLabel("Y:", block_widget)
-        valor_heuristico_label = QLabel("Valor Heurístico:", block_widget)
+        LEdit_nombre.setMaxLength(20)
 
-        # Connect textChanged signal of input fields to update button state
-        identifier_edit.textChanged.connect(self.habilitar_aceptar_coord)
-        x_coord_edit.textChanged.connect(self.habilitar_aceptar_coord)
-        y_coord_edit.textChanged.connect(self.habilitar_aceptar_coord)
-        valor_heuristico_edit.textChanged.connect(self.habilitar_aceptar_coord)
+        # Se añade un validador para que no se puedan ingresar letras en campos donde van números
+        validador = QIntValidator()
+        LEdit_coord_x.setValidator(validador)
+        LEdit_coord_y.setValidator(validador)
 
-        # Create separators between label and input fields
-        x_separator = QFrame(block_widget)
-        x_separator.setFrameShape(QFrame.VLine)
-        x_separator.setFrameShadow(QFrame.Sunken)
-        x_separator.setStyleSheet("background-color: blue;")
-        y_separator = QFrame(block_widget)
-        y_separator.setFrameShape(QFrame.VLine)
-        y_separator.setFrameShadow(QFrame.Sunken)
-        y_separator.setStyleSheet("background-color: blue;")
-        valor_separator = QFrame(block_widget)
-        valor_separator.setFrameShape(QFrame.VLine)
-        valor_separator.setFrameShadow(QFrame.Sunken)
-        valor_separator.setStyleSheet("background-color: blue;")
+        label_nombre = QLabel("Nombre:", widget_nodo)
+        label_coord_x = QLabel("X:", widget_nodo)
+        label_coord_y = QLabel("Y:", widget_nodo)
 
-        # Arrange the label, coordinate inputs, and connection input horizontally
+        # Se verifica si se debe habilitar el botón "aceptar" cuando ocurre un cambio en algún campo
+        LEdit_nombre.textChanged.connect(self.habilitar_boton_aceptar)
+        LEdit_coord_x.textChanged.connect(self.habilitar_boton_aceptar)
+        LEdit_coord_y.textChanged.connect(self.habilitar_boton_aceptar)
+
+        # Separadores (estético)
+        separador_x = QFrame(widget_nodo)
+        separador_x.setFrameShape(QFrame.VLine)
+        separador_x.setFrameShadow(QFrame.Sunken)
+        separador_x.setStyleSheet("background-color: blue;")
+        separador_y = QFrame(widget_nodo)
+        separador_y.setFrameShape(QFrame.VLine)
+        separador_y.setFrameShadow(QFrame.Sunken)
+        separador_y.setStyleSheet("background-color: blue;")
+
+        # Combinación de los campos y separadores
         hbox = QHBoxLayout()
-        hbox.addWidget(identifier_label)
-        hbox.addWidget(identifier_edit)
-        hbox.addWidget(x_separator)  # Separator after identifier field
-        hbox.addWidget(x_coord_label)
-        hbox.addWidget(x_coord_edit)
-        hbox.addWidget(y_separator)  # Separator after X coordinate field
-        hbox.addWidget(y_coord_label)
-        hbox.addWidget(y_coord_edit)
-        hbox.addWidget(valor_separator)  # Separator after Y coordinate field
-        hbox.addWidget(valor_heuristico_label)
-        hbox.addWidget(valor_heuristico_edit)
+        hbox.addWidget(label_nombre)
+        hbox.addWidget(LEdit_nombre)
+        hbox.addWidget(separador_x)
+        hbox.addWidget(label_coord_x)
+        hbox.addWidget(LEdit_coord_x)
+        hbox.addWidget(separador_y)
+        hbox.addWidget(label_coord_y)
+        hbox.addWidget(LEdit_coord_y)
 
-        # Set the block's layout
-        block_widget.setLayout(hbox)
+        widget_nodo.setLayout(hbox)
 
-        # Add the block widget to the main layout
-        self.layout.addWidget(block_widget)
+        self.layout.addWidget(widget_nodo)
 
-        # Store references to input fields in the data dictionary
-        self.data[identifier_edit] = {
-            'x_coord': x_coord_edit,
-            'y_coord': y_coord_edit,
-            'valor_heuristico': valor_heuristico_edit
+        # Se enlazan los nodos con los campos, para que se guarden aún en la pantalla siguiente, para poder volver hacia atrás
+        self.datos_nodos[LEdit_nombre] = {
+            'coord_x': LEdit_coord_x,
+            'coord_y': LEdit_coord_y,
         }
 
-        # Update button state after adding a new block
-        self.habilitar_aceptar_coord()
+        # Se deshabilita el botón de aceptar al añadir un nuevo bloque
+        self.habilitar_boton_aceptar()
 
-    def habilitar_aceptar_coord(self):
-        # Check if any input field is empty
-        for item in self.data.values():
-            if item['x_coord'].text() == "" or item['y_coord'].text() == "" or item['valor_heuristico'].text() == "":
-                self.accept_button.setEnabled(False)
+    def habilitar_boton_aceptar(self):
+        # Verificar si hay algún campo vacío
+        for nodo, atributos in self.datos_nodos.items():
+            if nodo.text() == "" or atributos['coord_x'].text() == "" or atributos['coord_y'].text() == "":
+                self.boton_aceptar.setEnabled(False)
                 return
         
-        # Enable the button if all input fields are filled
-        self.accept_button.setEnabled(True)
+        # Habilitar el botón si no hay ningún campo vacío
+        self.boton_aceptar.setEnabled(True)
 
-    def accept_coordinates(self):
-        # Clear existing content of the content widget
+    def aceptar_nodos(self):
+        # Se esconden los bloques de los nodos
         for i in reversed(range(self.layout.count())):
             widget = self.layout.itemAt(i).widget()
             if widget is not None:
                 widget.hide()
 
-        self.title_label.setText("Asignar conexiones")
+        self.label_titulo.setText("Asignar conexiones")
         
-        # Add checklist for each block label
-        for identifier_edit, attributes in self.data.items():
-            block_widget = QWidget()
-            block_layout = QVBoxLayout(block_widget)
-            block_label = QLabel(f"Conexiones para {identifier_edit.text()}", block_widget)
-            block_layout.addWidget(block_label)
-            connections = []
-            for other_identifier_edit in self.data.keys():
-                if other_identifier_edit != identifier_edit:
-                    checkbox = QCheckBox(other_identifier_edit.text(), block_widget)
-                    block_layout.addWidget(checkbox)
-                    connections.append(checkbox)
-            attributes['connections'] = connections
-            self.layout.addWidget(block_widget)
+        # Se crean checklists por cada nodo ingresado
+        for nombre, atributos in self.datos_nodos.items():
+            widget = QWidget()
+            layout = QVBoxLayout(widget)
+            etiqueta = QLabel(f"Conexiones para {nombre.text()}", widget)
+            layout.addWidget(etiqueta)
+            conexiones = []
+            for otro_nombre in self.datos_nodos.keys():
+                if otro_nombre != nombre:
+                    checkbox = QCheckBox(otro_nombre.text(), widget)
+                    checkbox.stateChanged.connect(self.asegurar_bidireccionalidad)
+                    layout.addWidget(checkbox)
+                    conexiones.append(checkbox)
+            atributos['conexiones'] = conexiones
+            self.layout.addWidget(widget)
 
-        # Delete the "Add block" button
-        self.add_block_button.hide()
-
-        # Delete the "Add block" button
-        self.accept_button.hide()
+        # Se esconden también los bloques de "añadir nodo" y "aceptar"
+        self.boton_aniadir_nodo.hide()
+        self.boton_aceptar.hide()
 
         # Cambiar el funcionamiento de "Aleatorio" para que rellene las checklists
-        self.aleatorio_button.clicked.disconnect(self.fill_random_numbers)
-        self.aleatorio_button.clicked.connect(self.fill_random_checkboxes)
+        self.boton_aleatorio.clicked.disconnect(self.aleatorio_numeros)
+        self.boton_aleatorio.clicked.connect(self.aleatorio_checkboxes)
 
-        # Create dropdown lists for selecting "Nodo inicial" and "Nodo final"
-        self.initial_node_dropdown = QComboBox()  # Create the initial_node_dropdown
-        self.initial_node_dropdown.addItems([identifier_edit.text() for identifier_edit in self.data.keys()])
+        # Creación combobox para nodos inicial y final
+        self.nodo_inicial = QComboBox()  
+        self.nodo_inicial.addItems([nombre_nodo.text() for nombre_nodo in self.datos_nodos.keys()])
 
-        self.final_node_dropdown = QComboBox()  # Create the final_node_dropdown
-        self.final_node_dropdown.addItems([identifier_edit.text() for identifier_edit in self.data.keys()])
+        self.nodo_final = QComboBox()  
+        self.nodo_final.addItems([nombre_nodo.text() for nombre_nodo in self.datos_nodos.keys()])
 
-        initial_label = QLabel("Nodo inicial:", block_widget)
-        final_label = QLabel("Nodo final:", block_widget)
+        label_inicial = QLabel("Nodo inicial:", widget)
+        label_final = QLabel("Nodo final:", widget)
         
         self.inicial_final_widget = QWidget()
         self.inicial_final_layout = QVBoxLayout(self.inicial_final_widget)
 
-        self.inicial_final_layout.addWidget(initial_label)
-        self.inicial_final_layout.addWidget(self.initial_node_dropdown)
-        self.inicial_final_layout.addWidget(final_label)
-        self.inicial_final_layout.addWidget(self.final_node_dropdown)
+        self.inicial_final_layout.addWidget(label_inicial)
+        self.inicial_final_layout.addWidget(self.nodo_inicial)
+        self.inicial_final_layout.addWidget(label_final)
+        self.inicial_final_layout.addWidget(self.nodo_final)
 
         self.busq_y_nav = QWidget()
         self.busq_y_nav_layout = QVBoxLayout(self.busq_y_nav)
@@ -217,124 +194,155 @@ class MainWindow(QMainWindow):
         self.metodo_busqueda_widget = QWidget()
         self.metodo_busqueda_layout = QHBoxLayout(self.metodo_busqueda_widget)
 
-        self.boton_escalada_simple = QPushButton("Escalada simple")
-        self.boton_escalada_simple.clicked.connect(self.escalada_simple)
-        self.metodo_busqueda_layout.addWidget(self.boton_escalada_simple)
+        self.boton_busqueda_euclidea = QPushButton("Distancia euclídea")
+        self.boton_busqueda_euclidea.clicked.connect(self.busqueda_euclidea)
+        self.metodo_busqueda_layout.addWidget(self.boton_busqueda_euclidea)
         
-        self.boton_maxima_pendiente = QPushButton("Máxima pendiente")
-        self.boton_maxima_pendiente.clicked.connect(self.maxima_pendiente)
-        self.metodo_busqueda_layout.addWidget(self.boton_maxima_pendiente)
+        self.boton_busqueda_manhattan = QPushButton("Distancia Manhattan")
+        self.boton_busqueda_manhattan.clicked.connect(self.busqueda_manhattan)
+        self.metodo_busqueda_layout.addWidget(self.boton_busqueda_manhattan)
 
+        self.metodo_busqueda_layout.setContentsMargins(0, 0, 0, 20)
+
+        self.label_busqueda = QLabel("Elegir heurística:")
+
+        self.busq_y_nav_layout.addWidget(self.label_busqueda)
         self.busq_y_nav_layout.addWidget(self.metodo_busqueda_widget)
 
         self.boton_volver = QPushButton("Volver")
         self.boton_volver.clicked.connect(self.volver)
         self.busq_y_nav_layout.addWidget(self.boton_volver)
         
-        self.bottom_layout.addWidget(self.inicial_final_widget)
-        self.bottom_layout.addWidget(self.busq_y_nav)
+        self.layout_inferior.addWidget(self.inicial_final_widget)
+        self.layout_inferior.addWidget(self.busq_y_nav)
 
-    def fill_random_numbers(self):
-        # Fill input fields with random numbers from 0 to 30, ensuring unique coordinates
-        used_coordinates = set()  # Set to store used coordinates
-        for attributes in self.data.values():
-            valor_heuristico = random.randint(0, 100)
-            x_coord = random.randint(0, 30)
-            y_coord = random.randint(0, 30)
-            while (x_coord, y_coord) in used_coordinates:
-                x_coord = random.randint(0, 30)
-                y_coord = random.randint(0, 30)
-            used_coordinates.add((x_coord, y_coord))
-            attributes['x_coord'].setText(str(x_coord))
-            attributes['y_coord'].setText(str(y_coord))
-            attributes['valor_heuristico'].setText(str(valor_heuristico))
+    def asegurar_bidireccionalidad(self, estado):
+        checkbox_clickeada = self.sender()
+        for nodo, atributos in self.datos_nodos.items():
+            if checkbox_clickeada in atributos['conexiones']:
+                nodo_clickeado = nodo
+        for nodo in self.datos_nodos.keys():
+            if nodo.text() == checkbox_clickeada.text():
+                for conexion_checkbox in self.datos_nodos[nodo]['conexiones']:
+                    if conexion_checkbox.text() == nodo_clickeado.text():
+                        if estado == 2:
+                            conexion_checkbox.setChecked(True)
+                        else:
+                            conexion_checkbox.setChecked(False)
 
-        for i, (identifier_edit, attributes) in enumerate(self.data.items()):
-            identifier = chr(ord('A') + i)  # Convert index to corresponding character (A-Z)
-            identifier_edit.setText(identifier)
 
-    def fill_random_checkboxes(self):
-        # Create a dictionary to store bidirectional connections
-        bidirectional_connections = {}
+    def aleatorio_numeros(self):
+        # Rellenar las coordenadas con números aleatorios únicos
+        coordenadas_existentes = set()
+        for atributos in self.datos_nodos.values():
+            coord_x = random.randint(0, 30)
+            coord_y = random.randint(0, 30)
+            while (coord_x, coord_y) in coordenadas_existentes:
+                coord_x = random.randint(0, 30)
+                coord_y = random.randint(0, 30)
+            coordenadas_existentes.add((coord_x, coord_y))
+            atributos['coord_x'].setText(str(coord_x))
+            atributos['coord_y'].setText(str(coord_y))
 
-        # Initialize bidirectional connections for each block
-        for identifier_edit in self.data.keys():
-            bidirectional_connections[identifier_edit.text()] = set()
+        # Rellenar nombres de nodos de la A a la Z
+        for i, (nombre_nodo, atributos) in enumerate(self.datos_nodos.items()):
+            letra = chr(ord('A') + i) 
+            nombre_nodo.setText(letra)
 
-        # Fill checkboxes randomly for each block
-        for identifier_edit, attributes in self.data.items():
-            connections = attributes['connections']
-            for checkbox in connections:
-                # Randomly select whether to check the checkbox
+    def aleatorio_checkboxes(self):
+        # Se rellenan aleatoriamente las checkboxes
+        for atributos in self.datos_nodos.values():
+            conexiones = atributos['conexiones']
+            for checkbox in conexiones:
                 checkbox.setChecked(bool(random.getrandbits(1)))
-                
-                # If the checkbox is checked, establish bidirectional connection
-                if checkbox.isChecked():
-                    other_identifier = checkbox.text()
-                    # Add bidirectional connection
-                    bidirectional_connections[identifier_edit.text()].add(other_identifier)
-                    bidirectional_connections[other_identifier].add(identifier_edit.text())
 
-        # Apply bidirectional connections to all blocks
-        for identifier_edit, attributes in self.data.items():
-            connections = attributes['connections']
-            for checkbox in connections:
-                other_identifier = checkbox.text()
-                if other_identifier in bidirectional_connections[identifier_edit.text()]:
-                    checkbox.setChecked(True)
-
-        self.initial_node_dropdown.setCurrentIndex(random.randint(0, self.initial_node_dropdown.count() - 1))
-        self.final_node_dropdown.setCurrentIndex(random.randint(0, self.final_node_dropdown.count() - 1))
+        # También se selecciona un valor aleatorio para nodo inicial y final
+        self.nodo_inicial.setCurrentIndex(random.randint(0, self.nodo_inicial.count() - 1))
+        self.nodo_final.setCurrentIndex(random.randint(0, self.nodo_final.count() - 1))
         
-    def print_attributes(self):
-        # Print the values of the attributes and connections of each label to the console
-        for identifier_edit, attributes in self.data.items():
-            x_coord = attributes['x_coord'].text()
-            y_coord = attributes['y_coord'].text()
-            valor_heuristico = attributes['valor_heuristico'].text()
-            connections = [checkbox.text() for checkbox in attributes['connections'] if checkbox.isChecked()]
-            print(f"Identifier: {identifier_edit.text()}, X Coord: {x_coord}, Y Coord: {y_coord}, Valor Heurístico: {valor_heuristico}, Connections: {connections}")
+    def imprimir_atributos(self, diccionario):
+        # Se imprimen los atributos
+        for nodo, atributos in diccionario.items():
+            print(f"Nombre: {nodo}, Coord X: {atributos['coord_x']}, Coord Y: {atributos['coord_y']}, Valor Heurístico: {atributos['valor_heuristico']}, conexiones: {atributos['conexiones']}")
 
-    def escalada_simple(self):
-        self.print_attributes()
-        print(f"Escalada simple")
-        print(f"Nodo inicial: {self.initial_node_dropdown.currentText()}")
-        print(f"Nodo final: {self.final_node_dropdown.currentText()}")
+    def busqueda_euclidea(self):
+        print(f"Búsqueda con heurística por distancia euclídea")
+        print(f"Nodo inicial: {self.nodo_inicial.currentText()}")
+        print(f"Nodo final: {self.nodo_final.currentText()}")
 
+        diccionario_busqueda = self.calcular_heuristicas(0)
 
-    def maxima_pendiente(self):
-        self.print_attributes()
-        print("Máxima pendiente")
-        print(f"Nodo inicial: {self.initial_node_dropdown.currentText()}")
-        print(f"Nodo final: {self.final_node_dropdown.currentText()}")
+        self.imprimir_atributos(diccionario_busqueda)
+
+        algoritmo.escaladaSimple(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+
+    def busqueda_manhattan(self):
+        print("Búsqueda con heurística por distancia Manhattan")
+        print(f"Nodo inicial: {self.nodo_inicial.currentText()}")
+        print(f"Nodo final: {self.nodo_final.currentText()}")
+
+        diccionario_busqueda = self.calcular_heuristicas(1)
+
+        self.imprimir_atributos(diccionario_busqueda)
+
+        algoritmo.maximaPendiente(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+
+    def calcular_heuristicas(self, heuristica):
+        # Calcular valores heurísticos y transformar los datos del diccionario para poder realizar búsquedas
+        nodo_final = self.nodo_final.currentText()
+        for nodo in self.datos_nodos.keys():
+            if nodo.text() == nodo_final:
+                nodo_final = nodo
+        nodo_final_coord_x = int(self.datos_nodos[nodo_final]['coord_x'].text())
+        nodo_final_coord_y = int(self.datos_nodos[nodo_final]['coord_y'].text())
+        
+        diccionario_busqueda = {}  # Nuevo diccionario
+        for nodo, atributos in self.datos_nodos.items():
+            if(heuristica == 0):
+                valor_heuristico = math.sqrt((nodo_final_coord_x - int(atributos['coord_x'].text()))**2 + (nodo_final_coord_y - int(atributos['coord_y'].text()))**2)
+            else:
+                valor_heuristico = abs(int(atributos['coord_x'].text()) - nodo_final_coord_x) + abs(int(atributos['coord_y'].text()) - nodo_final_coord_y)
+            nuevo_nodo = str(nodo.text())
+            nuevas_conexiones = [checkbox.text() for checkbox in atributos['conexiones'] if checkbox.isChecked()]
+            nuevos_atributos = {
+                'coord_x': str(atributos['coord_x'].text()),
+                'coord_y': str(atributos['coord_y'].text()),
+                'valor_heuristico': round(valor_heuristico),
+                'conexiones': nuevas_conexiones
+            }
+            diccionario_busqueda[nuevo_nodo] = nuevos_atributos
+        return diccionario_busqueda
 
     def volver(self):
+        # Borrar los datos de la pantalla de conexiones
         for i in range(self.layout.count()):
             widget = self.layout.itemAt(i).widget()
             if (widget is not None and widget.property("etiqueta") != "coordenadas"):
                 widget.deleteLater()
 
-        for i in range(self.bottom_layout.count()):
-            widget = self.bottom_layout.itemAt(i).widget()
+        # Esconder los elementos del widget inferior
+        for i in range(self.layout_inferior.count()):
+            widget = self.layout_inferior.itemAt(i).widget()
             if widget is not None:
                 widget.hide()
 
+        # Volver a mostrar los datos de la pantalla anterior
         for i in range(self.layout.count()):
             widget = self.layout.itemAt(i).widget()
             if (widget is not None):
                 widget.show()
 
-        self.add_block_button.show()
-        self.accept_button.show()
-        self.title_label.setText("Crear nodos")
-        self.aleatorio_button.clicked.disconnect(self.fill_random_checkboxes)
-        self.aleatorio_button.clicked.connect(self.fill_random_numbers)
+        self.boton_aniadir_nodo.show()
+        self.boton_aceptar.show()
+        self.label_titulo.setText("Crear nodos")
+        self.boton_aleatorio.clicked.disconnect(self.aleatorio_checkboxes)
+        self.boton_aleatorio.clicked.connect(self.aleatorio_numeros)
 
 def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec_())
+    aplicación = QApplication(sys.argv)
+    ventana = MainWindow()
+    ventana.show()
+    sys.exit(aplicación.exec_())
 
 if __name__ == "__main__":
     main()
