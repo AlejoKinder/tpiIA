@@ -1,3 +1,4 @@
+import math
 import sys
 import random
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QScrollArea, QHBoxLayout, QPushButton, QCheckBox, QFrame, QComboBox, QLabel
@@ -75,7 +76,6 @@ class MainWindow(QMainWindow):
         LEdit_nombre = QLineEdit("", widget_nodo)
         LEdit_coord_x = QLineEdit("", widget_nodo)
         LEdit_coord_y = QLineEdit("", widget_nodo)
-        LEdit_valor_heuristico = QLineEdit("", widget_nodo)
 
         LEdit_nombre.setMaxLength(20)
 
@@ -83,18 +83,15 @@ class MainWindow(QMainWindow):
         validador = QIntValidator()
         LEdit_coord_x.setValidator(validador)
         LEdit_coord_y.setValidator(validador)
-        LEdit_valor_heuristico.setValidator(validador)
 
         label_nombre = QLabel("Nombre:", widget_nodo)
         label_coord_x = QLabel("X:", widget_nodo)
         label_coord_y = QLabel("Y:", widget_nodo)
-        label_valor_heuristico = QLabel("Valor Heurístico:", widget_nodo)
 
         # Se verifica si se debe habilitar el botón "aceptar" cuando ocurre un cambio en algún campo
         LEdit_nombre.textChanged.connect(self.habilitar_boton_aceptar)
         LEdit_coord_x.textChanged.connect(self.habilitar_boton_aceptar)
         LEdit_coord_y.textChanged.connect(self.habilitar_boton_aceptar)
-        LEdit_valor_heuristico.textChanged.connect(self.habilitar_boton_aceptar)
 
         # Separadores (estético)
         separador_x = QFrame(widget_nodo)
@@ -105,10 +102,6 @@ class MainWindow(QMainWindow):
         separador_y.setFrameShape(QFrame.VLine)
         separador_y.setFrameShadow(QFrame.Sunken)
         separador_y.setStyleSheet("background-color: blue;")
-        separador_valor_heuristico = QFrame(widget_nodo)
-        separador_valor_heuristico.setFrameShape(QFrame.VLine)
-        separador_valor_heuristico.setFrameShadow(QFrame.Sunken)
-        separador_valor_heuristico.setStyleSheet("background-color: blue;")
 
         # Combinación de los campos y separadores
         hbox = QHBoxLayout()
@@ -120,9 +113,6 @@ class MainWindow(QMainWindow):
         hbox.addWidget(separador_y)
         hbox.addWidget(label_coord_y)
         hbox.addWidget(LEdit_coord_y)
-        hbox.addWidget(separador_valor_heuristico)
-        hbox.addWidget(label_valor_heuristico)
-        hbox.addWidget(LEdit_valor_heuristico)
 
         widget_nodo.setLayout(hbox)
 
@@ -132,7 +122,6 @@ class MainWindow(QMainWindow):
         self.datos_nodos[LEdit_nombre] = {
             'coord_x': LEdit_coord_x,
             'coord_y': LEdit_coord_y,
-            'valor_heuristico': LEdit_valor_heuristico
         }
 
         # Se deshabilita el botón de aceptar al añadir un nuevo bloque
@@ -141,7 +130,7 @@ class MainWindow(QMainWindow):
     def habilitar_boton_aceptar(self):
         # Verificar si hay algún campo vacío
         for nodo, atributos in self.datos_nodos.items():
-            if nodo.text() == "" or atributos['coord_x'].text() == "" or atributos['coord_y'].text() == "" or atributos['valor_heuristico'].text() == "":
+            if nodo.text() == "" or atributos['coord_x'].text() == "" or atributos['coord_y'].text() == "":
                 self.boton_aceptar.setEnabled(False)
                 return
         
@@ -205,14 +194,19 @@ class MainWindow(QMainWindow):
         self.metodo_busqueda_widget = QWidget()
         self.metodo_busqueda_layout = QHBoxLayout(self.metodo_busqueda_widget)
 
-        self.boton_escalada_simple = QPushButton("Escalada simple")
-        self.boton_escalada_simple.clicked.connect(self.escalada_simple)
-        self.metodo_busqueda_layout.addWidget(self.boton_escalada_simple)
+        self.boton_busqueda_euclidea = QPushButton("Distancia euclídea")
+        self.boton_busqueda_euclidea.clicked.connect(self.busqueda_euclidea)
+        self.metodo_busqueda_layout.addWidget(self.boton_busqueda_euclidea)
         
-        self.boton_maxima_pendiente = QPushButton("Máxima pendiente")
-        self.boton_maxima_pendiente.clicked.connect(self.maxima_pendiente)
-        self.metodo_busqueda_layout.addWidget(self.boton_maxima_pendiente)
+        self.boton_busqueda_manhattan = QPushButton("Distancia Manhattan")
+        self.boton_busqueda_manhattan.clicked.connect(self.busqueda_manhattan)
+        self.metodo_busqueda_layout.addWidget(self.boton_busqueda_manhattan)
 
+        self.metodo_busqueda_layout.setContentsMargins(0, 0, 0, 20)
+
+        self.label_busqueda = QLabel("Elegir heurística:")
+
+        self.busq_y_nav_layout.addWidget(self.label_busqueda)
         self.busq_y_nav_layout.addWidget(self.metodo_busqueda_widget)
 
         self.boton_volver = QPushButton("Volver")
@@ -241,7 +235,6 @@ class MainWindow(QMainWindow):
         # Rellenar las coordenadas con números aleatorios únicos
         coordenadas_existentes = set()
         for atributos in self.datos_nodos.values():
-            valor_heuristico = random.randint(0, 100)
             coord_x = random.randint(0, 30)
             coord_y = random.randint(0, 30)
             while (coord_x, coord_y) in coordenadas_existentes:
@@ -250,7 +243,6 @@ class MainWindow(QMainWindow):
             coordenadas_existentes.add((coord_x, coord_y))
             atributos['coord_x'].setText(str(coord_x))
             atributos['coord_y'].setText(str(coord_y))
-            atributos['valor_heuristico'].setText(str(valor_heuristico))
 
         # Rellenar nombres de nodos de la A a la Z
         for i, (nombre_nodo, atributos) in enumerate(self.datos_nodos.items()):
@@ -268,49 +260,58 @@ class MainWindow(QMainWindow):
         self.nodo_inicial.setCurrentIndex(random.randint(0, self.nodo_inicial.count() - 1))
         self.nodo_final.setCurrentIndex(random.randint(0, self.nodo_final.count() - 1))
         
-    def imprimir_atributos(self):
+    def imprimir_atributos(self, diccionario):
         # Se imprimen los atributos
-        for nodo, atributos in self.datos_nodos.items():
-            coord_x = atributos['coord_x'].text()
-            coord_y = atributos['coord_y'].text()
-            valor_heuristico = atributos['valor_heuristico'].text()
-            conexiones = [checkbox.text() for checkbox in atributos['conexiones'] if checkbox.isChecked()]
-            print(f"Identifier: {nodo.text()}, X Coord: {coord_x}, Y Coord: {coord_y}, Valor Heurístico: {valor_heuristico}, conexiones: {conexiones}")
+        for nodo, atributos in diccionario.items():
+            print(f"Nombre: {nodo}, Coord X: {atributos['coord_x']}, Coord Y: {atributos['coord_y']}, Valor Heurístico: {atributos['valor_heuristico']}, conexiones: {atributos['conexiones']}")
 
-    def escalada_simple(self):
-        self.imprimir_atributos()
-        print(f"Escalada simple")
+    def busqueda_euclidea(self):
+        print(f"Búsqueda con heurística por distancia euclídea")
         print(f"Nodo inicial: {self.nodo_inicial.currentText()}")
         print(f"Nodo final: {self.nodo_final.currentText()}")
 
-        diccionario_transformado = self.transformar_diccionario()
+        diccionario_busqueda = self.calcular_heuristicas(0)
 
-        algoritmo.escaladaSimple(diccionario_transformado, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+        self.imprimir_atributos(diccionario_busqueda)
 
-    def maxima_pendiente(self):
-        self.imprimir_atributos()
-        print("Máxima pendiente")
+        algoritmo.escaladaSimple(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+
+    def busqueda_manhattan(self):
+        print("Búsqueda con heurística por distancia Manhattan")
         print(f"Nodo inicial: {self.nodo_inicial.currentText()}")
         print(f"Nodo final: {self.nodo_final.currentText()}")
 
-        diccionario_transformado = self.transformar_diccionario()
+        diccionario_busqueda = self.calcular_heuristicas(1)
 
-        algoritmo.maximaPendiente(diccionario_transformado, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+        self.imprimir_atributos(diccionario_busqueda)
 
-    def transformar_diccionario(self):
-        # Transformar los datos del diccionario a STRING, para poder realizar búsquedas
-        diccionario_transformado = {}  # Nuevo diccionario con STRINGS
+        algoritmo.maximaPendiente(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+
+    def calcular_heuristicas(self, heuristica):
+        # Calcular valores heurísticos y transformar los datos del diccionario para poder realizar búsquedas
+        nodo_final = self.nodo_final.currentText()
+        for nodo in self.datos_nodos.keys():
+            if nodo.text() == nodo_final:
+                nodo_final = nodo
+        nodo_final_coord_x = int(self.datos_nodos[nodo_final]['coord_x'].text())
+        nodo_final_coord_y = int(self.datos_nodos[nodo_final]['coord_y'].text())
+        
+        diccionario_busqueda = {}  # Nuevo diccionario
         for nodo, atributos in self.datos_nodos.items():
+            if(heuristica == 0):
+                valor_heuristico = math.sqrt((nodo_final_coord_x - int(atributos['coord_x'].text()))**2 + (nodo_final_coord_y - int(atributos['coord_y'].text()))**2)
+            else:
+                valor_heuristico = abs(int(atributos['coord_x'].text()) - nodo_final_coord_x) + abs(int(atributos['coord_y'].text()) - nodo_final_coord_y)
             nuevo_nodo = str(nodo.text())
             nuevas_conexiones = [checkbox.text() for checkbox in atributos['conexiones'] if checkbox.isChecked()]
             nuevos_atributos = {
                 'coord_x': str(atributos['coord_x'].text()),
                 'coord_y': str(atributos['coord_y'].text()),
-                'valor_heuristico': str(atributos['valor_heuristico'].text()),
+                'valor_heuristico': round(valor_heuristico),
                 'conexiones': nuevas_conexiones
             }
-            diccionario_transformado[nuevo_nodo] = nuevos_atributos
-        return diccionario_transformado
+            diccionario_busqueda[nuevo_nodo] = nuevos_atributos
+        return diccionario_busqueda
 
     def volver(self):
         # Borrar los datos de la pantalla de conexiones
