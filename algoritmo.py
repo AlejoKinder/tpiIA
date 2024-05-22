@@ -42,8 +42,64 @@ def visualizarNodos(data, numFigura, node_colors=None):
     plt.show()
 
 
+def visualizarArbol(G, numFigura, inicial, node_colors=None):
+    # Limpiar la figura actual
+    plt.clf()
+    
+    # Obtener las posiciones predefinidas de los nodos
+    pos = nx.get_node_attributes(G, 'pos')
 
-def visualizarArbol(G, numFigura, pausa, node_colors=None):
+    # Asegurar que el nodo inicial tenga la posición (0, 0)
+    pos[inicial] = (0, 0)
+    
+    # Dibujar el árbol con las posiciones predefinidas
+    plt.figure(numFigura)
+    if node_colors:
+        nx.draw(G, pos=pos, with_labels=True, arrows=False,
+                node_color=[node_colors.get(node, 'blue') for node in G.nodes()])
+    else:
+        nx.draw(G, pos=pos, with_labels=True, arrows=False)
+
+    plt.title("Grafo como Árbol")
+    plt.pause(3)  # Pausa de 3 segundos
+
+'''def visualizarArbol(G, numFigura, inicial, nivel, ubicacion, node_colors=None):
+    # Limpiar la figura actual
+    plt.clf()
+    
+    # Obtener el árbol de búsqueda en anchura desde el nodo raíz (nodo inicial)
+    tree = nx.bfs_tree(G, source=inicial)  # Especifica el nodo inicial como la raíz del árbol
+    
+    # Definir las posiciones de los nodos manualmente
+    pos = {}
+    for node in tree.nodes():
+        # Define las coordenadas x e y de cada nodo manualmente
+        # Aquí estoy utilizando valores arbitrarios como ejemplo
+        if node == inicial:
+            pos[node] = (0, 0)  # La posición del nodo inicial
+        else:
+            # Asigna las posiciones de los nodos hijos de manera relativa al padre
+            # Puedes ajustar estos valores según tus necesidades
+            parent = list(tree.predecessors(node))[0]  # Obtener el padre del nodo
+            print ("pos x: ", pos[parent][1])
+            pos[node] = (0 + ubicacion, 0 - nivel)
+            #pos[node] = (0 - nivel, pos[parent][1] + ubicacion)
+
+    # Dibujar el árbol con posiciones manuales
+    plt.figure(numFigura)
+    if node_colors:
+        nx.draw(tree, pos=pos, with_labels=True, arrows=False, node_color=[node_colors.get(node, 'blue') for node in tree.nodes()])
+    else:
+        nx.draw(tree, pos=pos, with_labels=True, arrows=False)
+
+    plt.title("Grafo como Árbol")
+    plt.pause(3)  # Pausa de 3 segundos'''
+
+
+
+
+
+'''def visualizarArbol(G, numFigura, pausa, node_colors=None):
     # Obtener la posición de los nodos para dibujar como un árbol
     pos = nx.nx_agraph.graphviz_layout(G, prog='dot')
 
@@ -58,8 +114,14 @@ def visualizarArbol(G, numFigura, pausa, node_colors=None):
         nx.draw(G, pos, with_labels=True, arrows=False)
 
     plt.title("Grafo como Árbol")
-    plt.pause(3)  # Pausa de 3 segundos 
+    plt.pause(3)  # Pausa de 3 segundos '''
 
+
+def buscar_padre(camino, nodo_buscar):
+    for nodo_padre, atributos in camino.items():
+        if nodo_buscar in atributos['conexiones']:
+            return nodo_padre
+    return None
 
 
 def ejecutar_algoritmos(data, inicial, final):
@@ -67,12 +129,33 @@ def ejecutar_algoritmos(data, inicial, final):
     node_colors[inicial] = 'green'
     node_colors[final] = 'orange'
 
+    cantidadHijos = 0
+    nivelArbolSimple = 1
+    nivelArbolMaxima = 1
+
+    ubicacionEntreHijosSimple = 0
+    ubicacionEntreHijosMaxima = 0
+
+    cantidadHijosSimple = 0
+    cantidadHijosMaxima = 0
+
+    ubicacionesXsimple = {}
+    ubicacionesXmaxima = {}
+    ubicacionesXsimple[inicial]=0
+    ubicacionesXsimple[final]=0
+
+    condicionSimple = False
+    condicionMaxima = True
+
     visualizarNodos(data, 1, node_colors)   #Graficamos todos los nodos
 
     camino_simple = {}
     camino_maxima = {}
+    
 
     G = nx.DiGraph()
+    G.add_node(inicial, pos=(float(0), float(0)))
+    ultimoGraficado = inicial
     H = nx.DiGraph()
 
     print("nodo inicial y final: ", inicial, final)
@@ -81,31 +164,72 @@ def ejecutar_algoritmos(data, inicial, final):
     escaladaSimple(data, inicial, final, camino_simple)
     maximaPendiente(data, inicial, final, camino_maxima)
 
+    copia_camino_simple = camino_simple
+    copia_camino_maxima = camino_maxima
+
     # Variable para controlar el bucle
     continue_running = True
 
-    while continue_running:
-        condicionSimple = False
-        condicionMaxima = False
+    while continue_running:                         
 
-
-        pprint.pprint(camino_simple)   #depuracion
+        pprint.pprint(camino_simple)   #depuración
 
         if not camino_simple:
             print("no entre a la primera condición")
             condicionSimple = True
-        elif condicionSimple != True:
+        elif condicionSimple != True:            
             primer_elemento_clave_simple, primer_elemento_valor_simple = next(iter(camino_simple.items()))
             print(f"Primera clave: {primer_elemento_clave_simple}, Primer valor: {primer_elemento_valor_simple}")
 
+            if cantidadHijosSimple == 0:   #condición para evitar que cada vez que se dibuja un hijo se cambie el valor
+
+                if primer_elemento_clave_simple != inicial:
+                    nivelArbolSimple = nivelArbolSimple + 1   #el nivel define la posición en el eje y del nodo.
+                    print("ENTRE ACA")
+
+                print("con 1")
+                cantidadHijosSimple = len(camino_simple[primer_elemento_clave_simple]['conexiones'])   #rescatamos la cantidad de hijos que tiene para ubicarlos en el eje x
+                print ("Cantidad de hijos", len(camino_simple[primer_elemento_clave_simple]['conexiones']))   #depuración
+                if cantidadHijosSimple % 2 == 0:
+                    print("con 2")
+                    ubicacionEntreHijosSimple = (cantidadHijosSimple / 2) / -1
+                else:
+                    print("con 3")
+                    ubicacionEntreHijosSimple = ((cantidadHijosSimple / 2) - 0.5) / -1
+
+            else:
+   
+                print("con 4")
+                if cantidadHijosSimple % 2 == 0 and ubicacionEntreHijosSimple + 1 == 0:
+                    print("con 5")
+                    ubicacionEntreHijosSimple = ubicacionEntreHijosSimple + 2
+                else:
+                    print("con 6")
+                    ubicacionEntreHijosSimple = ubicacionEntreHijosSimple + 1
+
             if not camino_simple[primer_elemento_clave_simple]["conexiones"]:                
                 camino_simple.pop(primer_elemento_clave_simple)
+                cantidadHijosSimple = 0
+
             else:
-                agregarGrafo(G, primer_elemento_clave_simple, primer_elemento_valor_simple["conexiones"][0])
+                print("Primer padre", buscar_padre(copia_camino_simple, ultimoGraficado))
+                print("Segundo padre", buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0]))                
+                #F.add_node(node, pos=(float(properties['coord_x']), float(properties['coord_y'])))
+                G.add_node(primer_elemento_valor_simple["conexiones"][0], pos=(float(ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple), float(0 - nivelArbolSimple)))
+                ubicacionesXsimple[primer_elemento_valor_simple["conexiones"][0]] = ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple
+                #FIJARSE DE PONER CONDICIÓN PARA DESCARTAR CONEXIONES DE NODOS QUE YA SE GRAFICARON.
+                G.add_edge(primer_elemento_clave_simple, primer_elemento_valor_simple["conexiones"][0])
+                G.add_edge(primer_elemento_valor_simple["conexiones"][0], primer_elemento_clave_simple)
+                #agregarGrafo(G, primer_elemento_clave_simple, primer_elemento_valor_simple["conexiones"][0])
                 print("Se añadio conexion al nodo:", primer_elemento_valor_simple["conexiones"][0])
                 primer_elemento_valor_simple["conexiones"].pop(0)
 
-        pprint.pprint(camino_maxima)   #depuracion
+            '''if primer_elemento_clave_simple != inicial:
+                nivelArbolSimple = nivelArbolSimple + 1 #el nivel define la posición en el eje y del nodo.'''
+             
+                
+
+        #pprint.pprint(camino_maxima)   #depuración
 
         if not camino_maxima:
             print("no entre a la primera condición")
@@ -126,9 +250,13 @@ def ejecutar_algoritmos(data, inicial, final):
         if condicionSimple == True and condicionMaxima == True:
             continue_running = False
         
+
+        print("NivelSimple: ",nivelArbolSimple)
+        print("Ubicación: ",ubicacionEntreHijosSimple)
         
-        visualizarArbol(G, 2, False, node_colors)
-        visualizarArbol(H, 3, True, node_colors)
+        visualizarArbol(G, 2, inicial, node_colors)
+        #visualizarArbol(G, 2, inicial, nivelArbolSimple, ubicacionEntreHijosSimple, node_colors)
+        #visualizarArbol(H, 3, inicial, nivelArbolMaxima, ubicacionEntreHijosMaxima,node_colors)
         #time.sleep(3)
         #plt.pause(3)  # Pausa de 3 segundos
 
