@@ -1,12 +1,11 @@
 import math
 import sys
 import random
-import threading
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QScrollArea, QHBoxLayout, QPushButton, QCheckBox, QFrame, QComboBox, QLabel
 from PyQt5.QtGui import QIntValidator
 
 import algoritmo   #archivo que hace los algoritmos
-import resultados
+import resultados   #archivo que muestra la tabla de resultados
 
 class MainWindow(QMainWindow):
     def __init__(self):
