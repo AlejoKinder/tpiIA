@@ -1,6 +1,7 @@
 import math
 import sys
 import random
+import threading
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QScrollArea, QHBoxLayout, QPushButton, QCheckBox, QFrame, QComboBox, QLabel
 from PyQt5.QtGui import QIntValidator
 
@@ -272,10 +273,13 @@ class MainWindow(QMainWindow):
         print(f"Nodo final: {self.nodo_final.currentText()}")
 
         diccionario_busqueda = self.calcular_heuristicas(0)
-
         self.imprimir_atributos(diccionario_busqueda)
 
-        estadisticas = algoritmo.escaladaSimple(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+        print("nodo inicial y final: ", self.nodo_inicial.currentText(), self.nodo_final.currentText())
+
+        algoritmo.ejecutar_algoritmos(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+
+        #estadisticas = algoritmo.escaladaSimple(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
         # estadisticas[0][0] = EUCLIDEA: se llegó al nodo final [Sí|No]
         # estadisticas[1][0] = EUCLIDEA: camino recorrido [string]
         # estadisticas[2][0] = EUCLIDEA: cant. saltos [int]
@@ -283,8 +287,8 @@ class MainWindow(QMainWindow):
         # estadisticas[1][1] = MANHATTAN: camino recorrido [string]
         # estadisticas[2][1] = MANHATTAN: cant. saltos [int]
 
-        self.tabla = resultados.PopupResultados(0, estadisticas)
-        self.tabla.show()
+        #self.tabla = resultados.PopupResultados(0, estadisticas)
+        #self.tabla.show()
 
     def busqueda_manhattan(self):
         print("Búsqueda con heurística por distancia Manhattan")
@@ -295,7 +299,7 @@ class MainWindow(QMainWindow):
 
         self.imprimir_atributos(diccionario_busqueda)
 
-        estadisticas = algoritmo.maximaPendiente(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+        algoritmo.ejecutar_algoritmos(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
         # estadisticas[0][0] = EUCLIDEA: se llegó al nodo final [Sí|No]
         # estadisticas[1][0] = EUCLIDEA: camino recorrido [string]
         # estadisticas[2][0] = EUCLIDEA: cant. saltos [int]
@@ -303,8 +307,8 @@ class MainWindow(QMainWindow):
         # estadisticas[1][1] = MANHATTAN: camino recorrido [string]
         # estadisticas[2][1] = MANHATTAN: cant. saltos [int]
 
-        self.tabla = resultados.PopupResultados(1, estadisticas)
-        self.tabla.show()
+        #self.tabla = resultados.PopupResultados(1, estadisticas)
+        #self.tabla.show()
 
     def calcular_heuristicas(self, heuristica):
         # Calcular valores heurísticos y transformar los datos del diccionario para poder realizar búsquedas
