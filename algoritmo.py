@@ -38,7 +38,7 @@ def visualizarNodos(data, numFigura, node_colors=None):
         nx.draw(F, pos, with_labels=True, arrows=False)
 
     plt.title("Grafos con Conexiones")
-    plt.pause(3)  # Pausa de 5 segundos
+    plt.pause(3)  # Pausa de 3 segundos
     plt.show()
 
 
@@ -50,7 +50,7 @@ def visualizarArbol(G, numFigura, inicial, node_colors=None):
     pos = nx.get_node_attributes(G, 'pos')
 
     # Asegurar que el nodo inicial tenga la posición (0, 0)
-    pos[inicial] = (0, 0)
+    #pos[inicial] = (0, 0)
     
     # Dibujar el árbol con las posiciones predefinidas
     plt.figure(numFigura)
@@ -143,9 +143,11 @@ def ejecutar_algoritmos(data, inicial, final):
     ubicacionesXmaxima = {}
     ubicacionesXsimple[inicial]=0
     ubicacionesXsimple[final]=0
+    ubicacionesXmaxima[inicial]=0
+    ubicacionesXmaxima[final]=0
 
     condicionSimple = False
-    condicionMaxima = True
+    condicionMaxima = False
 
     visualizarNodos(data, 1, node_colors)   #Graficamos todos los nodos
 
@@ -155,8 +157,8 @@ def ejecutar_algoritmos(data, inicial, final):
 
     G = nx.DiGraph()
     G.add_node(inicial, pos=(float(0), float(0)))
-    ultimoGraficado = inicial
     H = nx.DiGraph()
+    H.add_node(inicial, pos=(float(0), float(0)))
 
     print("nodo inicial y final: ", inicial, final)
 
@@ -172,6 +174,7 @@ def ejecutar_algoritmos(data, inicial, final):
 
     while continue_running:                         
 
+        print("diccionario simple: ")
         pprint.pprint(camino_simple)   #depuración
 
         if not camino_simple:
@@ -187,33 +190,23 @@ def ejecutar_algoritmos(data, inicial, final):
                     nivelArbolSimple = nivelArbolSimple + 1   #el nivel define la posición en el eje y del nodo.
                     print("ENTRE ACA")
 
-                print("con 1")
                 cantidadHijosSimple = len(camino_simple[primer_elemento_clave_simple]['conexiones'])   #rescatamos la cantidad de hijos que tiene para ubicarlos en el eje x
                 print ("Cantidad de hijos", len(camino_simple[primer_elemento_clave_simple]['conexiones']))   #depuración
                 if cantidadHijosSimple % 2 == 0:
-                    print("con 2")
                     ubicacionEntreHijosSimple = (cantidadHijosSimple / 2) / -1
                 else:
-                    print("con 3")
                     ubicacionEntreHijosSimple = ((cantidadHijosSimple / 2) - 0.5) / -1
-
             else:
-   
-                print("con 4")
                 if cantidadHijosSimple % 2 == 0 and ubicacionEntreHijosSimple + 1 == 0:
-                    print("con 5")
                     ubicacionEntreHijosSimple = ubicacionEntreHijosSimple + 2
                 else:
-                    print("con 6")
                     ubicacionEntreHijosSimple = ubicacionEntreHijosSimple + 1
 
             if not camino_simple[primer_elemento_clave_simple]["conexiones"]:                
                 camino_simple.pop(primer_elemento_clave_simple)
                 cantidadHijosSimple = 0
 
-            else:
-                print("Primer padre", buscar_padre(copia_camino_simple, ultimoGraficado))
-                print("Segundo padre", buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0]))                
+            else:             
                 #F.add_node(node, pos=(float(properties['coord_x']), float(properties['coord_y'])))
                 G.add_node(primer_elemento_valor_simple["conexiones"][0], pos=(float(ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple), float(0 - nivelArbolSimple)))
                 ubicacionesXsimple[primer_elemento_valor_simple["conexiones"][0]] = ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple
@@ -223,45 +216,68 @@ def ejecutar_algoritmos(data, inicial, final):
                 #agregarGrafo(G, primer_elemento_clave_simple, primer_elemento_valor_simple["conexiones"][0])
                 print("Se añadio conexion al nodo:", primer_elemento_valor_simple["conexiones"][0])
                 primer_elemento_valor_simple["conexiones"].pop(0)
-
-            '''if primer_elemento_clave_simple != inicial:
-                nivelArbolSimple = nivelArbolSimple + 1 #el nivel define la posición en el eje y del nodo.'''
-             
                 
 
-        #pprint.pprint(camino_maxima)   #depuración
+        print("diccionario maxima: ")
+        pprint.pprint(camino_maxima)  # depuración
 
         if not camino_maxima:
-            print("no entre a la primera condición")
-            condicionMaxima = True
+                print("NO ENTRE MAXIMA")
+                condicionMaxima = True
         elif condicionMaxima != True:
-            primer_elemento_clave_maxima, primer_elemento_valor_maxima = next(iter(camino_maxima.items()))
-            print(f"Primera clave: {primer_elemento_clave_maxima}, Primer valor: {primer_elemento_valor_maxima}")
+                print("AYUDAME LOCO")
+                primer_elemento_clave_maxima, primer_elemento_valor_maxima = next(iter(camino_maxima.items()))
+                print(f"Primera clave: {primer_elemento_clave_maxima}, Primer valor: {primer_elemento_valor_maxima}")
 
-            if not camino_maxima[primer_elemento_clave_maxima]["conexiones"]:                
-                camino_maxima.pop(primer_elemento_clave_maxima)
-            else:
-                agregarGrafo(H, primer_elemento_clave_maxima, primer_elemento_valor_maxima["conexiones"][0])
-                print("Se añadio conexion al nodo:", primer_elemento_valor_maxima["conexiones"][0])
-                primer_elemento_valor_maxima["conexiones"].pop(0)
-            
+                if cantidadHijosMaxima == 0:  # condición para evitar que cada vez que se dibuja un hijo se cambie el valor
+                    if primer_elemento_clave_maxima != inicial:
+                        nivelArbolMaxima += 1  # el nivel define la posición en el eje y del nodo.
+                        print("ENTRE ACA")
+
+                    cantidadHijosMaxima = len(camino_maxima[primer_elemento_clave_maxima]['conexiones'])  # rescatamos la cantidad de hijos que tiene para ubicarlos en el eje x
+                    print("Cantidad de hijos", cantidadHijosMaxima)  # depuración
+                    if cantidadHijosMaxima % 2 == 0:
+                        ubicacionEntreHijosMaxima = (cantidadHijosMaxima / 2) / -1
+                    else:
+                        ubicacionEntreHijosMaxima = ((cantidadHijosMaxima / 2) - 0.5) / -1
+                else:
+                    if cantidadHijosMaxima % 2 == 0 and ubicacionEntreHijosMaxima + 1 == 0:
+                        ubicacionEntreHijosMaxima += 2
+                    else:
+                        ubicacionEntreHijosMaxima += 1
+
+                if not camino_maxima[primer_elemento_clave_maxima]["conexiones"]:
+                    camino_maxima.pop(primer_elemento_clave_maxima)
+                    cantidadHijosMaxima = 0
+                else:
+                    H.add_node(primer_elemento_valor_maxima["conexiones"][0], pos=(float(ubicacionesXmaxima[buscar_padre(copia_camino_maxima, primer_elemento_valor_maxima["conexiones"][0])] + ubicacionEntreHijosMaxima), float(0 - nivelArbolMaxima)))
+                    ubicacionesXmaxima[primer_elemento_valor_maxima["conexiones"][0]] = ubicacionesXmaxima[buscar_padre(copia_camino_maxima, primer_elemento_valor_maxima["conexiones"][0])] + ubicacionEntreHijosMaxima
+                    H.add_edge(primer_elemento_clave_maxima, primer_elemento_valor_maxima["conexiones"][0])
+                    H.add_edge(primer_elemento_valor_maxima["conexiones"][0], primer_elemento_clave_maxima)
+                    print("Se añadio conexion al nodo:", primer_elemento_valor_maxima["conexiones"][0])
+                    primer_elemento_valor_maxima["conexiones"].pop(0)
+                
 
 
         if condicionSimple == True and condicionMaxima == True:
-            continue_running = False
-        
+                continue_running = False
+            
 
         print("NivelSimple: ",nivelArbolSimple)
-        print("Ubicación: ",ubicacionEntreHijosSimple)
-        
-        visualizarArbol(G, 2, inicial, node_colors)
+        print("Ubicación simple: ",ubicacionEntreHijosSimple)
+            
+        if condicionSimple != True:
+            visualizarArbol(G, 2, inicial, node_colors)
+
+        if condicionMaxima != True:
+            visualizarArbol(H, 3, inicial, node_colors)
         #visualizarArbol(G, 2, inicial, nivelArbolSimple, ubicacionEntreHijosSimple, node_colors)
         #visualizarArbol(H, 3, inicial, nivelArbolMaxima, ubicacionEntreHijosMaxima,node_colors)
         #time.sleep(3)
         #plt.pause(3)  # Pausa de 3 segundos
 
-    
-    print("Final del bucle de grafico")
+        
+        print("Final del bucle de grafico")
     
 
 def escaladaSimple(data, inicial, final, camino):
