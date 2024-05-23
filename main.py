@@ -276,7 +276,7 @@ class MainWindow(QMainWindow):
 
         print("nodo inicial y final: ", self.nodo_inicial.currentText(), self.nodo_final.currentText())
 
-        algoritmo.ejecutar_algoritmos(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
+        estadisticas = algoritmo.ejecutar_algoritmos(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
 
         #estadisticas = algoritmo.escaladaSimple(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
         # estadisticas[0][0] = EUCLIDEA: se llegó al nodo final [Sí|No]
@@ -286,8 +286,8 @@ class MainWindow(QMainWindow):
         # estadisticas[1][1] = MANHATTAN: camino recorrido [string]
         # estadisticas[2][1] = MANHATTAN: cant. saltos [int]
 
-        #self.tabla = resultados.PopupResultados(0, estadisticas)
-        #self.tabla.show()
+        self.tabla = resultados.PopupResultados(0, estadisticas)
+        self.tabla.show()
 
     def busqueda_manhattan(self):
         print("Búsqueda con heurística por distancia Manhattan")

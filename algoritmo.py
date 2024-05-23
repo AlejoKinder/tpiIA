@@ -1,16 +1,6 @@
-import random
-import time
 import networkx as nx
 import matplotlib.pyplot as plt
 import pprint
-import time
-
-def agregarGrafo(G, u, v, w = 1, sent = True):
-    G.add_edge(u, v, weight = w)
-
-    #si sentido es falso, quiere decir que queremos que sea unidireccional
-    if sent:
-        G.add_edge(v, u, weight = w)
 
 def visualizarNodos(data, numFigura, node_colors=None):
     F = nx.DiGraph()  # Crear un nuevo grafo dirigido
@@ -63,61 +53,12 @@ def visualizarArbol(G, numFigura, inicial, node_colors=None):
     plt.title("Grafo como Árbol")
     plt.pause(3)  # Pausa de 3 segundos
 
-'''def visualizarArbol(G, numFigura, inicial, nivel, ubicacion, node_colors=None):
-    # Limpiar la figura actual
-    plt.clf()
-    
-    # Obtener el árbol de búsqueda en anchura desde el nodo raíz (nodo inicial)
-    tree = nx.bfs_tree(G, source=inicial)  # Especifica el nodo inicial como la raíz del árbol
-    
-    # Definir las posiciones de los nodos manualmente
-    pos = {}
-    for node in tree.nodes():
-        # Define las coordenadas x e y de cada nodo manualmente
-        # Aquí estoy utilizando valores arbitrarios como ejemplo
-        if node == inicial:
-            pos[node] = (0, 0)  # La posición del nodo inicial
-        else:
-            # Asigna las posiciones de los nodos hijos de manera relativa al padre
-            # Puedes ajustar estos valores según tus necesidades
-            parent = list(tree.predecessors(node))[0]  # Obtener el padre del nodo
-            print ("pos x: ", pos[parent][1])
-            pos[node] = (0 + ubicacion, 0 - nivel)
-            #pos[node] = (0 - nivel, pos[parent][1] + ubicacion)
 
-    # Dibujar el árbol con posiciones manuales
-    plt.figure(numFigura)
-    if node_colors:
-        nx.draw(tree, pos=pos, with_labels=True, arrows=False, node_color=[node_colors.get(node, 'blue') for node in tree.nodes()])
-    else:
-        nx.draw(tree, pos=pos, with_labels=True, arrows=False)
-
-    plt.title("Grafo como Árbol")
-    plt.pause(3)  # Pausa de 3 segundos'''
+def agregar_datos_al_camino(algoritmo_index, nodo, estadisticas):
+    estadisticas[1][algoritmo_index] += nodo + ', '
 
 
-
-
-
-'''def visualizarArbol(G, numFigura, pausa, node_colors=None):
-    # Obtener la posición de los nodos para dibujar como un árbol
-    pos = nx.nx_agraph.graphviz_layout(G, prog='dot')
-
-    # Limpiar la figura actual
-    plt.clf()
-
-    # Dibujar el grafo como un árbol
-    plt.figure(numFigura)
-    if node_colors:
-        nx.draw(G, pos, with_labels=True, arrows=False, node_color=[node_colors.get(node, 'blue') for node in G.nodes()])
-    else:
-        nx.draw(G, pos, with_labels=True, arrows=False)
-
-    plt.title("Grafo como Árbol")
-    plt.pause(3)  # Pausa de 3 segundos '''
-
-
-def buscar_padre(camino, nodo_buscar):
+def buscar_padre(camino, nodo_buscar):   #función que se usa para buscar el padre de un nodo en el diccionario del camino.
     for nodo_padre, atributos in camino.items():
         if nodo_buscar in atributos['conexiones']:
             return nodo_padre
@@ -125,11 +66,14 @@ def buscar_padre(camino, nodo_buscar):
 
 
 def ejecutar_algoritmos(data, inicial, final):
+    estadisticas = [['No', 'No'],  # Se llegó al nodo final [Sí|No]
+                    ['', ''],      # Camino recorrido [string]
+                    [0, 0]]        # Cant. saltos [int]
+
     node_colors = {}
     node_colors[inicial] = 'green'
     node_colors[final] = 'orange'
 
-    cantidadHijos = 0
     nivelArbolSimple = 1
     nivelArbolMaxima = 1
 
@@ -163,8 +107,11 @@ def ejecutar_algoritmos(data, inicial, final):
     print("nodo inicial y final: ", inicial, final)
 
     # Ejecutar algoritmos
-    escaladaSimple(data, inicial, final, camino_simple)
-    maximaPendiente(data, inicial, final, camino_maxima)
+    escaladaSimple(data, inicial, final, camino_simple, estadisticas, 0)
+    print("CANT. SALTOS", estadisticas[2][0])   #Depuración.
+    estadisticas[2][0] = str(estadisticas[2][0])
+    maximaPendiente(data, inicial, final, camino_maxima, estadisticas,1)
+    estadisticas[2][1] = str(estadisticas[2][1])
 
     copia_camino_simple = camino_simple
     copia_camino_maxima = camino_maxima
@@ -172,7 +119,7 @@ def ejecutar_algoritmos(data, inicial, final):
     # Variable para controlar el bucle
     continue_running = True
 
-    while continue_running:                         
+    while continue_running:   #bucle que se va a recorrer mientras los diccionarios tengan datos.                       
 
         print("diccionario simple: ")
         pprint.pprint(camino_simple)   #depuración
@@ -207,13 +154,11 @@ def ejecutar_algoritmos(data, inicial, final):
                 cantidadHijosSimple = 0
 
             else:             
-                #F.add_node(node, pos=(float(properties['coord_x']), float(properties['coord_y'])))
                 G.add_node(primer_elemento_valor_simple["conexiones"][0], pos=(float(ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple), float(0 - nivelArbolSimple)))
                 ubicacionesXsimple[primer_elemento_valor_simple["conexiones"][0]] = ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple
                 #FIJARSE DE PONER CONDICIÓN PARA DESCARTAR CONEXIONES DE NODOS QUE YA SE GRAFICARON.
                 G.add_edge(primer_elemento_clave_simple, primer_elemento_valor_simple["conexiones"][0])
                 G.add_edge(primer_elemento_valor_simple["conexiones"][0], primer_elemento_clave_simple)
-                #agregarGrafo(G, primer_elemento_clave_simple, primer_elemento_valor_simple["conexiones"][0])
                 print("Se añadio conexion al nodo:", primer_elemento_valor_simple["conexiones"][0])
                 primer_elemento_valor_simple["conexiones"].pop(0)
                 
@@ -271,16 +216,15 @@ def ejecutar_algoritmos(data, inicial, final):
 
         if condicionMaxima != True:
             visualizarArbol(H, 3, inicial, node_colors)
-        #visualizarArbol(G, 2, inicial, nivelArbolSimple, ubicacionEntreHijosSimple, node_colors)
-        #visualizarArbol(H, 3, inicial, nivelArbolMaxima, ubicacionEntreHijosMaxima,node_colors)
-        #time.sleep(3)
-        #plt.pause(3)  # Pausa de 3 segundos
-
         
         print("Final del bucle de grafico")
+
+        
+    return estadisticas
     
 
-def escaladaSimple(data, inicial, final, camino):
+def escaladaSimple(data, inicial, final, camino, estadisticas, algoritmoSeleccionado):
+    finalEstadistica = True   #variable que se usa para ver si se llego al nodo final
     explorados = set()
     act = inicial
     next_node = None
@@ -292,7 +236,7 @@ def escaladaSimple(data, inicial, final, camino):
         if act == final:
             print("Nodo final")
             break
-        explorados.add(act)
+        explorados.add(act)     
         camino[act] = {"conexiones": []}
         costo_actual = data[act]['valor_heuristico']
         connections = data[act]['conexiones']
@@ -302,9 +246,7 @@ def escaladaSimple(data, inicial, final, camino):
         for connection in connections:
             if connection not in explorados:
                 explorados.add(connection)
-                #agregarGrafo(G, act, connection)
                 camino[act]["conexiones"].append(connection)
-                #visualizarArbol(G, 2, node_colors)
                 if connection != final and int(data[connection]['valor_heuristico']) < int(costo_actual):
                     next_node = connection
                     break
@@ -312,23 +254,31 @@ def escaladaSimple(data, inicial, final, camino):
                     next_node = connection
                     break
         if next_node is None:
+            finalEstadistica = False
             print("Hay un mínimo local en:", act)
             node_colors[act] = 'red'
-            #visualizarArbol(G, node_colors)
             break
-        # Si encontramos un nodo con un costo menor, avanzamos hacia ese nodo
+            # Si encontramos un nodo con un costo menor, avanzamos hacia ese nodo
         else:
             act = next_node
             print("El nuevo nodo actual es", act)
+
+            agregar_datos_al_camino(algoritmoSeleccionado, act, estadisticas) 
+            estadisticas[2][algoritmoSeleccionado] = estadisticas[2][algoritmoSeleccionado] + 1  
     print("Fin del bucle")
 
-def maximaPendiente(data, inicial, final, camino):
+    if finalEstadistica:
+        estadisticas[0][algoritmoSeleccionado] = 'Sí'
+    else:
+        estadisticas[0][algoritmoSeleccionado] = 'No'
+
+def maximaPendiente(data, inicial, final, camino, estadisticas, algoritmoSeleccionado):
+    finalEstadistica = True
     explorados = set()
     act = inicial
     next_node = None
     node_colors = {inicial: 'green', final: 'orange'}
     print("Algoritmo seleccionado: Maxima Pendiente")
-    #H = nx.DiGraph()
     while act != final:
         print("Estoy en el nodo:", act)
         if act == final:
@@ -344,9 +294,7 @@ def maximaPendiente(data, inicial, final, camino):
         for connection in connections:
             if connection not in explorados:
                 explorados.add(connection)
-                #agregarGrafo(H, act, connection)
                 camino[act]["conexiones"].append(connection)
-                #visualizarArbol(H, 3, node_colors)
                 if connection != final and int(data[connection]['valor_heuristico']) < int(costo_actual):
                     next_node = connection
                     costo_actual = data[next_node]['valor_heuristico']
@@ -354,12 +302,19 @@ def maximaPendiente(data, inicial, final, camino):
                     next_node = connection
                     break
         if next_node is None:
+            finalEstadistica = False   #variable para ver si se llego al final
             print("Hay un mínimo local en:", act)
             node_colors[act] = 'red'
-            #visualizarArbol(G, node_colors)
             break
-        # Si encontramos un nodo con un costo menor, avanzamos hacia ese nodo
         else:
             act = next_node
             print("El nuevo nodo actual es", act)
+
+            agregar_datos_al_camino(algoritmoSeleccionado, act, estadisticas) 
+            estadisticas[2][algoritmoSeleccionado] = estadisticas[2][algoritmoSeleccionado] + 1  
     print("Fin del bucle")
+
+    if finalEstadistica:
+        estadisticas[0][algoritmoSeleccionado] = 'Sí'
+    else:
+        estadisticas[0][algoritmoSeleccionado] = 'No'
