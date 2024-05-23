@@ -227,6 +227,7 @@ def escaladaSimple(data, inicial, final, camino, estadisticas, algoritmoSeleccio
     finalEstadistica = True   #variable que se usa para ver si se llego al nodo final
     explorados = set()
     act = inicial
+    agregar_datos_al_camino(algoritmoSeleccionado, inicial, estadisticas)
     next_node = None
     node_colors = {inicial: 'green', final: 'orange'}
     print("Algoritmo seleccionado: Escalada simple")
@@ -276,6 +277,7 @@ def maximaPendiente(data, inicial, final, camino, estadisticas, algoritmoSelecci
     finalEstadistica = True
     explorados = set()
     act = inicial
+    agregar_datos_al_camino(algoritmoSeleccionado, inicial, estadisticas)
     next_node = None
     node_colors = {inicial: 'green', final: 'orange'}
     print("Algoritmo seleccionado: Maxima Pendiente")
