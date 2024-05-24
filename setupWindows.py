@@ -5,7 +5,7 @@ includefiles = ['algoritmo.py', 'resultados.py']
 
 # Define las opciones
 build_exe_options = {
-    "packages": ["algoritmo", "resultados", "os", "sys", "random", "PyQt5.QtWidgets", "PyQt5.QtGui", "matplotlib", "networkx"],
+    "packages": ["algoritmo", "resultados", "os", "sys", "random", "PyQt5.QtWidgets", "PyQt5.QtGui", "PyQt5.QtCore", "random", "networkx", "matplotlib.pyplot"],
     "include_files": includefiles
 }
 

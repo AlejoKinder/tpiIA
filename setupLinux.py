@@ -3,7 +3,7 @@ from cx_Freeze import setup, Executable
 # Añade los módulos necesarios en la opción 'packages'
 options = {
     'build_exe': {
-        'packages': ['algoritmo', 'resultados','PyQt5', 'random', 'networkx', 'matplotlib'],
+        'packages': ['algoritmo', 'resultados' ,'os', 'sys', 'random','PyQt5.QtWidgets', 'PyQt5.QtGui', 'PyQt5.QtCore', 'networkx', 'matplotlib.pyplot'],
         'include_files': ['algoritmo.py', 'resultados.py']
     }
 }
