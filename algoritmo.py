@@ -2,7 +2,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import pprint
 
-def visualizarNodos(data, numFigura, node_colors=None):
+def visualizarNodos(data, numFigura, posX, posY, node_colors=None):
     F = nx.DiGraph()  # Crear un nuevo grafo dirigido
 
     # Agregar todos los nodos al grafo
@@ -20,8 +20,11 @@ def visualizarNodos(data, numFigura, node_colors=None):
     # Obtener las posiciones de los nodos según las coordenadas
     pos = nx.get_node_attributes(F, 'pos')
 
-    # Dibujar el grafo
     plt.figure(numFigura)
+    mngr = plt.get_current_fig_manager()
+    mngr.window.setGeometry(posX, posY, 450, 450)  # Cambia las coordenadas y el tamaño según lo necesites
+
+
     if node_colors:
         nx.draw(F, pos, with_labels=True, arrows=False, node_color=[node_colors.get(node, 'blue') for node in F.nodes()])
     else:
@@ -32,26 +35,27 @@ def visualizarNodos(data, numFigura, node_colors=None):
     plt.show()
 
 
-def visualizarArbol(G, numFigura, inicial, node_colors=None):
+def visualizarArbol(G, numFigura, inicial, posX, posY, node_colors=None):
     # Limpiar la figura actual
     plt.clf()
     
     # Obtener las posiciones predefinidas de los nodos
     pos = nx.get_node_attributes(G, 'pos')
 
-    # Asegurar que el nodo inicial tenga la posición (0, 0)
-    #pos[inicial] = (0, 0)
-    
-    # Dibujar el árbol con las posiciones predefinidas
-    plt.figure(numFigura)
+    fig = plt.figure(numFigura)
+
+     # Reubicar la ventana
+    mngr = plt.get_current_fig_manager()
+    mngr.window.setGeometry(posX, posY, 450, 450)  # Cambia las coordenadas y el tamaño según lo necesites
+
     if node_colors:
         nx.draw(G, pos=pos, with_labels=True, arrows=False,
                 node_color=[node_colors.get(node, 'blue') for node in G.nodes()])
     else:
         nx.draw(G, pos=pos, with_labels=True, arrows=False)
 
-    plt.title("Grafo como Árbol")
-    plt.pause(3)  # Pausa de 3 segundos
+    #plt.title("Grafo como Árbol")
+    plt.pause(2)  # Pausa de 3 segundos
 
 
 def agregar_datos_al_camino(algoritmo_index, nodo, estadisticas):
@@ -93,7 +97,7 @@ def ejecutar_algoritmos(data, inicial, final):
     condicionSimple = False
     condicionMaxima = False
 
-    visualizarNodos(data, 1, node_colors)   #Graficamos todos los nodos
+    visualizarNodos(data, "Grafo", 1, 1, node_colors)   #Graficamos todos los nodos
 
     camino_simple = {}
     camino_maxima = {}
@@ -154,7 +158,7 @@ def ejecutar_algoritmos(data, inicial, final):
                 cantidadHijosSimple = 0
 
             else:             
-                G.add_node(primer_elemento_valor_simple["conexiones"][0], pos=(float(ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple), float(0 - nivelArbolSimple)))
+                G.add_node(primer_elemento_valor_simple["conexiones"][0], pos=(float(ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple), float(0 - nivelArbolSimple)), weight=5)
                 ubicacionesXsimple[primer_elemento_valor_simple["conexiones"][0]] = ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple
                 #FIJARSE DE PONER CONDICIÓN PARA DESCARTAR CONEXIONES DE NODOS QUE YA SE GRAFICARON.
                 G.add_edge(primer_elemento_clave_simple, primer_elemento_valor_simple["conexiones"][0])
@@ -212,10 +216,10 @@ def ejecutar_algoritmos(data, inicial, final):
         print("Ubicación simple: ",ubicacionEntreHijosSimple)
             
         if condicionSimple != True:
-            visualizarArbol(G, 2, inicial, node_colors)
+            visualizarArbol(G, "Escalada Simple", inicial, 450, 1, node_colors)
 
         if condicionMaxima != True:
-            visualizarArbol(H, 3, inicial, node_colors)
+            visualizarArbol(H, "Máxima Pendiente", inicial, 900, 1, node_colors)
         
         print("Final del bucle de grafico")
 
