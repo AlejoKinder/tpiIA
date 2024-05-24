@@ -303,8 +303,6 @@ class MainWindow(QMainWindow):
         diccionario_busqueda = self.calcular_heuristicas(0)
         self.imprimir_atributos(diccionario_busqueda)
 
-        print("nodo inicial y final: ", self.nodo_inicial.currentText(), self.nodo_final.currentText())
-
         estadisticas = algoritmo.ejecutar_algoritmos(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
 
         self.tabla = resultados.PopupResultados(0, estadisticas)
