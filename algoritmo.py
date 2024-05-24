@@ -1,6 +1,5 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-import pprint
 
 def visualizarNodos(data, numFigura, posX, posY, node_colors=None):
     F = nx.DiGraph()  # Crear un nuevo grafo dirigido
@@ -22,9 +21,9 @@ def visualizarNodos(data, numFigura, posX, posY, node_colors=None):
 
     plt.figure(numFigura)
     mngr = plt.get_current_fig_manager()
-    mngr.window.setGeometry(posX, posY, 450, 450)  # Cambia las coordenadas y el tamaño según lo necesites
+    mngr.window.setGeometry(posX, posY, 450, 450)  # Establecemos posició y tamaño de la ventana.
 
-
+    #dibujamos
     if node_colors:
         nx.draw(F, pos, with_labels=True, arrows=False, node_color=[node_colors.get(node, 'blue') for node in F.nodes()])
     else:
@@ -54,8 +53,7 @@ def visualizarArbol(G, numFigura, inicial, posX, posY, node_colors=None):
     else:
         nx.draw(G, pos=pos, with_labels=True, arrows=False)
 
-    #plt.title("Grafo como Árbol")
-    plt.pause(2)  # Pausa de 3 segundos
+    plt.pause(1.5)  # Pausa de 3 segundos
 
 
 def agregar_datos_al_camino(algoritmo_index, nodo, estadisticas):
@@ -97,22 +95,19 @@ def ejecutar_algoritmos(data, inicial, final):
     condicionSimple = False
     condicionMaxima = False
 
-    visualizarNodos(data, "Grafo", 1, 30, node_colors)   #Graficamos todos los nodos
+    visualizarNodos(data, "Grafo", 1, 30, node_colors)   #Graficamos todos los nodos en forma de grafo
 
     camino_simple = {}
     camino_maxima = {}
     
 
-    G = nx.DiGraph()
+    G = nx.DiGraph()   #variable que guarda el grafico de escalada simple.
     G.add_node(inicial, pos=(float(0), float(0)))
-    H = nx.DiGraph()
+    H = nx.DiGraph()   #variable que guarda el grafico de máxima pendiente
     H.add_node(inicial, pos=(float(0), float(0)))
-
-    print("nodo inicial y final: ", inicial, final)
 
     # Ejecutar algoritmos
     escaladaSimple(data, inicial, final, camino_simple, estadisticas, 0)
-    print("CANT. SALTOS", estadisticas[2][0])   #Depuración.
     estadisticas[2][0] = str(estadisticas[2][0])
     maximaPendiente(data, inicial, final, camino_maxima, estadisticas,1)
     estadisticas[2][1] = str(estadisticas[2][1])
@@ -125,24 +120,18 @@ def ejecutar_algoritmos(data, inicial, final):
 
     while continue_running:   #bucle que se va a recorrer mientras los diccionarios tengan datos.                       
 
-        print("diccionario simple: ")
-        pprint.pprint(camino_simple)   #depuración
-
         if not camino_simple:
-            print("no entre a la primera condición")
             condicionSimple = True
         elif condicionSimple != True:            
             primer_elemento_clave_simple, primer_elemento_valor_simple = next(iter(camino_simple.items()))
-            print(f"Primera clave: {primer_elemento_clave_simple}, Primer valor: {primer_elemento_valor_simple}")
 
             if cantidadHijosSimple == 0:   #condición para evitar que cada vez que se dibuja un hijo se cambie el valor
 
                 if primer_elemento_clave_simple != inicial:
                     nivelArbolSimple = nivelArbolSimple + 1   #el nivel define la posición en el eje y del nodo.
-                    print("ENTRE ACA")
 
                 cantidadHijosSimple = len(camino_simple[primer_elemento_clave_simple]['conexiones'])   #rescatamos la cantidad de hijos que tiene para ubicarlos en el eje x
-                print ("Cantidad de hijos", len(camino_simple[primer_elemento_clave_simple]['conexiones']))   #depuración
+                
                 if cantidadHijosSimple % 2 == 0:
                     ubicacionEntreHijosSimple = (cantidadHijosSimple / 2) / -1
                 else:
@@ -160,31 +149,21 @@ def ejecutar_algoritmos(data, inicial, final):
             else:             
                 G.add_node(primer_elemento_valor_simple["conexiones"][0], pos=(float(ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple), float(0 - nivelArbolSimple)), weight=5)
                 ubicacionesXsimple[primer_elemento_valor_simple["conexiones"][0]] = ubicacionesXsimple[buscar_padre(copia_camino_simple, primer_elemento_valor_simple["conexiones"][0])] + ubicacionEntreHijosSimple
-                #FIJARSE DE PONER CONDICIÓN PARA DESCARTAR CONEXIONES DE NODOS QUE YA SE GRAFICARON.
                 G.add_edge(primer_elemento_clave_simple, primer_elemento_valor_simple["conexiones"][0])
                 G.add_edge(primer_elemento_valor_simple["conexiones"][0], primer_elemento_clave_simple)
-                print("Se añadio conexion al nodo:", primer_elemento_valor_simple["conexiones"][0])
                 primer_elemento_valor_simple["conexiones"].pop(0)
-                
-
-        print("diccionario maxima: ")
-        pprint.pprint(camino_maxima)  # depuración
 
         if not camino_maxima:
-                print("NO ENTRE MAXIMA")
                 condicionMaxima = True
         elif condicionMaxima != True:
-                print("AYUDAME LOCO")
                 primer_elemento_clave_maxima, primer_elemento_valor_maxima = next(iter(camino_maxima.items()))
-                print(f"Primera clave: {primer_elemento_clave_maxima}, Primer valor: {primer_elemento_valor_maxima}")
 
                 if cantidadHijosMaxima == 0:  # condición para evitar que cada vez que se dibuja un hijo se cambie el valor
                     if primer_elemento_clave_maxima != inicial:
                         nivelArbolMaxima += 1  # el nivel define la posición en el eje y del nodo.
-                        print("ENTRE ACA")
 
                     cantidadHijosMaxima = len(camino_maxima[primer_elemento_clave_maxima]['conexiones'])  # rescatamos la cantidad de hijos que tiene para ubicarlos en el eje x
-                    print("Cantidad de hijos", cantidadHijosMaxima)  # depuración
+
                     if cantidadHijosMaxima % 2 == 0:
                         ubicacionEntreHijosMaxima = (cantidadHijosMaxima / 2) / -1
                     else:
@@ -211,9 +190,6 @@ def ejecutar_algoritmos(data, inicial, final):
         if condicionSimple == True and condicionMaxima == True:
                 continue_running = False
             
-
-        print("NivelSimple: ",nivelArbolSimple)
-        print("Ubicación simple: ",ubicacionEntreHijosSimple)
             
         if condicionSimple != True:
             visualizarArbol(G, "Escalada Simple", inicial, 450, 30, node_colors)
@@ -237,9 +213,7 @@ def escaladaSimple(data, inicial, final, camino, estadisticas, algoritmoSeleccio
     print("Algoritmo seleccionado: Escalada simple")
     #G = nx.DiGraph()
     while act != final:
-        print("Estoy en el nodo:", act)
         if act == final:
-            print("Nodo final")
             break
         explorados.add(act)     
         camino[act] = {"conexiones": []}
@@ -286,9 +260,7 @@ def maximaPendiente(data, inicial, final, camino, estadisticas, algoritmoSelecci
     node_colors = {inicial: 'green', final: 'orange'}
     print("Algoritmo seleccionado: Maxima Pendiente")
     while act != final:
-        print("Estoy en el nodo:", act)
         if act == final:
-            print("Nodo final")
             break
         explorados.add(act)
         camino[act] = {"conexiones": []}

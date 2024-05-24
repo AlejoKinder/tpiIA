@@ -3,6 +3,7 @@ import sys
 import random
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QScrollArea, QHBoxLayout, QPushButton, QCheckBox, QFrame, QComboBox, QLabel, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QIntValidator
+from PyQt5.QtCore import Qt
 
 import algoritmo   #archivo que hace los algoritmos
 import resultados   #archivo que muestra la tabla de resultados
@@ -373,12 +374,14 @@ class MainWindow(QMainWindow):
         j = 0
         for key, datos in diccionario_busqueda.items():
             item = QTableWidgetItem(key)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             tabla_heuristicas.setItem(i, j, item)
             j += 1
             item = QTableWidgetItem(str(datos['valor_heuristico']))
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)   
             tabla_heuristicas.setItem(i, j, item)
             i += 1
-            j = 0
+            j = 0            
             
         self.scroll_heuristicas.setWidget(tabla_heuristicas)
         
