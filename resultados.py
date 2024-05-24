@@ -10,7 +10,7 @@ class PopupResultados(QDialog):
             self.setWindowTitle("Resultados de búsqueda: heurística euclídea")
         else:
             self.setWindowTitle("Resultados de búsqueda: heurística Manhattan")
-        self.resize(400, 150)
+        self.resize(400, 170)
 
         self.datos = datos
 
