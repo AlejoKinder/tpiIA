@@ -97,7 +97,7 @@ def ejecutar_algoritmos(data, inicial, final):
     condicionSimple = False
     condicionMaxima = False
 
-    visualizarNodos(data, "Grafo", 1, 1, node_colors)   #Graficamos todos los nodos
+    visualizarNodos(data, "Grafo", 1, 30, node_colors)   #Graficamos todos los nodos
 
     camino_simple = {}
     camino_maxima = {}
@@ -216,10 +216,10 @@ def ejecutar_algoritmos(data, inicial, final):
         print("Ubicación simple: ",ubicacionEntreHijosSimple)
             
         if condicionSimple != True:
-            visualizarArbol(G, "Escalada Simple", inicial, 450, 1, node_colors)
+            visualizarArbol(G, "Escalada Simple", inicial, 450, 30, node_colors)
 
         if condicionMaxima != True:
-            visualizarArbol(H, "Máxima Pendiente", inicial, 900, 1, node_colors)
+            visualizarArbol(H, "Máxima Pendiente", inicial, 900, 30, node_colors)
         
         print("Final del bucle de grafico")
 

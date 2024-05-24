@@ -1,7 +1,7 @@
 import math
 import sys
 import random
-from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QScrollArea, QHBoxLayout, QPushButton, QCheckBox, QFrame, QComboBox, QLabel
+from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QLineEdit, QScrollArea, QHBoxLayout, QPushButton, QCheckBox, QFrame, QComboBox, QLabel, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QIntValidator
 
 import algoritmo   #archivo que hace los algoritmos
@@ -12,12 +12,17 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Buscador automático")
-        self.setGeometry(100, 100, 600, 400)
+        self.setGeometry(100, 100, 500, 400)
 
-        widget_principal = QWidget()
-        self.setCentralWidget(widget_principal)
+        self.resultados_mostrados = False
 
-        layout_principal = QVBoxLayout(widget_principal)
+        self.widget_principal = QWidget()
+        self.setCentralWidget(self.widget_principal)
+
+        self.layout_principal_h = QHBoxLayout(self.widget_principal)
+        widget_principal_v = QWidget()
+        layout_principal_v = QVBoxLayout(widget_principal_v)
+        self.layout_principal_h.addWidget(widget_principal_v)
 
         self.titulo_layout = QHBoxLayout()
 
@@ -31,18 +36,18 @@ class MainWindow(QMainWindow):
 
         self.titulo_layout.addWidget(self.boton_aleatorio)
 
-        layout_principal.addLayout(self.titulo_layout)
+        layout_principal_v.addLayout(self.titulo_layout)
 
 
         self.scroll_area = QScrollArea()
         self.scroll_area.setWidgetResizable(True)  
-        layout_principal.addWidget(self.scroll_area)
+        layout_principal_v.addWidget(self.scroll_area)
 
         # Crear widget para contener los bloques de los nodos
         self.widget_nodos = QWidget()
         self.scroll_area.setWidget(self.widget_nodos)
 
-        self.layout = QVBoxLayout(self.widget_nodos)
+        self.layout_scroll = QVBoxLayout(self.widget_nodos)
 
         # Diccionario para guardar todos los datos de los nodos
         self.datos_nodos = {}
@@ -63,7 +68,7 @@ class MainWindow(QMainWindow):
         self.layout_inferior.addWidget(self.boton_aceptar)
 
  
-        layout_principal.addWidget(self.widget_inferior)
+        layout_principal_v.addWidget(self.widget_inferior)
 
         # Añadir el primer nodo
         self.aniadir_nodo()
@@ -117,7 +122,7 @@ class MainWindow(QMainWindow):
 
         widget_nodo.setLayout(hbox)
 
-        self.layout.addWidget(widget_nodo)
+        self.layout_scroll.addWidget(widget_nodo)
 
         # Se enlazan los nodos con los campos, para que se guarden aún en la pantalla siguiente, para poder volver hacia atrás
         self.datos_nodos[LEdit_nombre] = {
@@ -140,11 +145,28 @@ class MainWindow(QMainWindow):
 
     def aceptar_nodos(self):
         # Se esconden los bloques de los nodos
-        for i in reversed(range(self.layout.count())):
-            widget = self.layout.itemAt(i).widget()
+        for i in reversed(range(self.layout_scroll.count())):
+            widget = self.layout_scroll.itemAt(i).widget()
             if widget is not None:
                 widget.hide()
 
+        # Crear el área para mostrar los valores heurísticos
+        self.separador_heuristica = QFrame()
+        self.separador_heuristica.setFrameShape(QFrame.VLine)
+        self.separador_heuristica.setFrameShadow(QFrame.Sunken)
+        self.layout_principal_h.addWidget(self.separador_heuristica)
+
+        self.widget_heuristicas = QWidget()
+        layout_heuristicas = QVBoxLayout(self.widget_heuristicas)
+        label_heuristicas = QLabel("Valores heurísticos", self.widget_heuristicas)
+        layout_heuristicas.addWidget(label_heuristicas)
+        label_heuristicas.setStyleSheet("font-size: 14px; font-weight: bold;")
+        self.scroll_heuristicas = QScrollArea()
+        self.scroll_heuristicas.setWidgetResizable(True)
+        self.scroll_heuristicas.setMinimumWidth(220)
+        layout_heuristicas.addWidget(self.scroll_heuristicas)
+        self.layout_principal_h.addWidget(self.widget_heuristicas)
+        
         self.label_titulo.setText("Asignar conexiones")
         
         # Se crean checklists por cada nodo ingresado
@@ -161,7 +183,7 @@ class MainWindow(QMainWindow):
                     layout.addWidget(checkbox)
                     conexiones.append(checkbox)
             atributos['conexiones'] = conexiones
-            self.layout.addWidget(widget)
+            self.layout_scroll.addWidget(widget)
 
         # Se esconden también los bloques de "añadir nodo" y "aceptar"
         self.boton_aniadir_nodo.hide()
@@ -271,6 +293,13 @@ class MainWindow(QMainWindow):
         print(f"Nodo inicial: {self.nodo_inicial.currentText()}")
         print(f"Nodo final: {self.nodo_final.currentText()}")
 
+        self.boton_busqueda_manhattan.setEnabled(False)
+        self.boton_busqueda_euclidea.setEnabled(False)
+        self.boton_volver.setEnabled(False)
+
+        if(self.resultados_mostrados):
+            self.tabla.close()
+
         diccionario_busqueda = self.calcular_heuristicas(0)
         self.imprimir_atributos(diccionario_busqueda)
 
@@ -278,36 +307,38 @@ class MainWindow(QMainWindow):
 
         estadisticas = algoritmo.ejecutar_algoritmos(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
 
-        #estadisticas = algoritmo.escaladaSimple(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
-        # estadisticas[0][0] = EUCLIDEA: se llegó al nodo final [Sí|No]
-        # estadisticas[1][0] = EUCLIDEA: camino recorrido [string]
-        # estadisticas[2][0] = EUCLIDEA: cant. saltos [int]
-        # estadisticas[0][1] = MANHATTAN: se llegó al nodo final [Sí|No]
-        # estadisticas[1][1] = MANHATTAN: camino recorrido [string]
-        # estadisticas[2][1] = MANHATTAN: cant. saltos [int]
-
         self.tabla = resultados.PopupResultados(0, estadisticas)
         self.tabla.show()
+        self.resultados_mostrados = True
+        self.boton_busqueda_manhattan.setEnabled(True)
+        self.boton_busqueda_euclidea.setEnabled(True)
+        self.boton_volver.setEnabled(True)
 
     def busqueda_manhattan(self):
         print("Búsqueda con heurística por distancia Manhattan")
         print(f"Nodo inicial: {self.nodo_inicial.currentText()}")
         print(f"Nodo final: {self.nodo_final.currentText()}")
 
+        self.boton_busqueda_manhattan.setEnabled(False)
+        self.boton_busqueda_euclidea.setEnabled(False)
+        self.boton_volver.setEnabled(False)
+
+        if(self.resultados_mostrados):
+            self.tabla.close()
+
         diccionario_busqueda = self.calcular_heuristicas(1)
 
         self.imprimir_atributos(diccionario_busqueda)
 
         estadisticas = algoritmo.ejecutar_algoritmos(diccionario_busqueda, self.nodo_inicial.currentText(), self.nodo_final.currentText())
-        # estadisticas[0][0] = EUCLIDEA: se llegó al nodo final [Sí|No]
-        # estadisticas[1][0] = EUCLIDEA: camino recorrido [string]
-        # estadisticas[2][0] = EUCLIDEA: cant. saltos [int]
-        # estadisticas[0][1] = MANHATTAN: se llegó al nodo final [Sí|No]
-        # estadisticas[1][1] = MANHATTAN: camino recorrido [string]
-        # estadisticas[2][1] = MANHATTAN: cant. saltos [int]
 
         self.tabla = resultados.PopupResultados(1, estadisticas)
         self.tabla.show()
+        self.resultados_mostrados = True
+        self.boton_busqueda_manhattan.setEnabled(True)
+        self.boton_busqueda_euclidea.setEnabled(True)
+        self.boton_volver.setEnabled(True)
+        
 
     def calcular_heuristicas(self, heuristica):
         # Calcular valores heurísticos y transformar los datos del diccionario para poder realizar búsquedas
@@ -333,14 +364,38 @@ class MainWindow(QMainWindow):
                 'conexiones': nuevas_conexiones
             }
             diccionario_busqueda[nuevo_nodo] = nuevos_atributos
+        
+        tabla_heuristicas = QTableWidget()
+        tabla_heuristicas.setColumnCount(2)  # Set the number of columns
+        tabla_heuristicas.setRowCount(len(diccionario_busqueda))
+        tabla_heuristicas.setHorizontalHeaderLabels(["Nodo", "Valor heurístico"])
+        tabla_heuristicas.horizontalHeader().setMinimumSectionSize(100)
+
+        i = 0
+        j = 0
+        for key, datos in diccionario_busqueda.items():
+            item = QTableWidgetItem(key)
+            tabla_heuristicas.setItem(i, j, item)
+            j += 1
+            item = QTableWidgetItem(str(datos['valor_heuristico']))
+            tabla_heuristicas.setItem(i, j, item)
+            i += 1
+            j = 0
+            
+        self.scroll_heuristicas.setWidget(tabla_heuristicas)
+        
         return diccionario_busqueda
 
     def volver(self):
         # Borrar los datos de la pantalla de conexiones
-        for i in range(self.layout.count()):
-            widget = self.layout.itemAt(i).widget()
+        for i in range(self.layout_scroll.count()):
+            widget = self.layout_scroll.itemAt(i).widget()
             if (widget is not None and widget.property("etiqueta") != "coordenadas"):
                 widget.deleteLater()
+
+        self.widget_heuristicas.deleteLater()
+
+        self.separador_heuristica.deleteLater()
 
         # Esconder los elementos del widget inferior
         for i in range(self.layout_inferior.count()):
@@ -349,8 +404,8 @@ class MainWindow(QMainWindow):
                 widget.hide()
 
         # Volver a mostrar los datos de la pantalla anterior
-        for i in range(self.layout.count()):
-            widget = self.layout.itemAt(i).widget()
+        for i in range(self.layout_scroll.count()):
+            widget = self.layout_scroll.itemAt(i).widget()
             if (widget is not None):
                 widget.show()
 
