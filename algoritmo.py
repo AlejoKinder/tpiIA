@@ -55,6 +55,10 @@ def visualizarArbol(G, numFigura, inicial, posX, posY, colores_nodo=None):
 
     plt.pause(1.5)  # Pausa de 1.5 segundos
 
+def cerrarFiguras(numFigura):
+    plt.figure(numFigura)
+    plt.close()
+
 
 def agregar_datos_al_camino(algoritmo_index, nodo, estadisticas):
     estadisticas[1][algoritmo_index] += nodo + ', '
@@ -68,6 +72,13 @@ def buscar_padre(camino, nodo_buscar):   #función que se usa para buscar el pad
 
 
 def ejecutar_algoritmos(datos, inicial, final):
+    
+    #cerramos todas las figuras.
+    cerrarFiguras("Grafo")
+    cerrarFiguras("Escalada Simple")
+    cerrarFiguras("Máxima Pendiente")
+
+
     estadisticas = [['No', 'No'],  # Se llegó al nodo final [Sí|No]
                     ['', ''],      # Camino recorrido [string]
                     [0, 0],         # Cant. saltos [int]
@@ -106,6 +117,11 @@ def ejecutar_algoritmos(datos, inicial, final):
     G.add_node(inicial, pos=(float(0), float(0)))
     H = nx.DiGraph()   #variable que guarda el grafico de máxima pendiente
     H.add_node(inicial, pos=(float(0), float(0)))
+
+    if(inicial == final):   #si el  nodo inicial es el final, grafica directamente.
+        visualizarArbol(G, "Escalada Simple", inicial, 450, 30, colores_nodo)
+        visualizarArbol(H, "Máxima Pendiente", inicial, 900, 30, colores_nodo)
+
 
     # Ejecutar algoritmos
     escaladaSimple(datos, inicial, final, camino_simple, estadisticas, 0)
